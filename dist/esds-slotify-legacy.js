@@ -3912,7 +3912,7 @@ LitElement['finalized'] = true;
 LitElement.render = render$1;
 
 function _templateObject() {
-  var data = _taggedTemplateLiteral(["\n      <h1 class=\"esds-slotify\">Welcome to Burgersville</h1>\n      <s-slot name=\"top-bun\"></s-slot>\n      <s-slot name=\"cheese\"></s-slot>\n      <s-slot></s-slot>\n      <s-slot name=\"bottom-bun\"></s-slot>\n      <h2>PLATE FOR THE BURGER</h2>\n    "]);
+  var data = _taggedTemplateLiteral(["\n      <h1 class=\"esds-slotify\">Welcome to Burgersville</h1>\n      <s-slot name=\"top-bun\"></s-slot>\n      <s-slot name=\"cheese\">No cheese? So sad :(</s-slot>\n      <s-slot></s-slot>\n      <br/>\n      <s-slot name=\"special-sauce\">Some default special sauce</s-slot>\n      <s-slot name=\"bottom-bun\"></s-slot>\n      <h2>PLATE FOR THE BURGER</h2>\n    "]);
 
   _templateObject = function _templateObject() {
     return data;
@@ -3945,12 +3945,6 @@ function (_HTMLElement2) {
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(SSlot).call(this));
     _this.name = _this.getAttribute('name');
-    var observer = new MutationObserver(function () {
-      console.log("something changed");
-    });
-    observer.observe(_assertThisInitialized(_this), {
-      childList: true
-    });
     return _this;
   }
 
@@ -3959,27 +3953,74 @@ function (_HTMLElement2) {
     value: function connectedCallback() {
       var _this2 = this;
 
-      this.sRoot = this.closest('s-root');
-      this.updateAssignedContent();
+      this.sRoot = this.closest('s-root'); // Observer the "Light DOM" of the component
+
       var lightDomObserver = new MutationObserver(function () {
         return _this2.updateAssignedContent();
       });
       lightDomObserver.observe(this.sRoot.parentElement, {
         childList: true
+      }); // Create assigned content and fallback content wrappers
+
+      this.fallbackWrapper = this.fallbackWrapper || this.createFallbackWrapper();
+      this.assignedWrapper = this.assignedWrapper || this.createAssignedWrapper(); // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
+
+      var assignedContentObserver = new MutationObserver(function () {
+        _this2.updateAssignedContent();
       });
+      assignedContentObserver.observe(this.assignedWrapper, {
+        childList: true
+      });
+      this.updateAssignedContent();
+    }
+  }, {
+    key: "createFallbackWrapper",
+    value: function createFallbackWrapper() {
+      // This is only called once, get the contents of this <s-slot> and wrap them in a span
+      if (this.childNodes.length === 0) {
+        // there's no default content, don't create the wrapper
+        return false;
+      } else {
+        var fallbackSpan = document.createElement('span');
+        fallbackSpan.classList.add('fallback-content');
+        this.childNodes.forEach(function (node) {
+          fallbackSpan.appendChild(node);
+        });
+        this.appendChild(fallbackSpan); // Add the fallback span to the component;
+
+        fallbackSpan.setAttribute('hidden', true);
+        return fallbackSpan;
+      }
+    }
+  }, {
+    key: "createAssignedWrapper",
+    value: function createAssignedWrapper() {
+      var assignedSpan = document.createElement('span');
+      assignedSpan.classList.add('assigned-content');
+      this.appendChild(assignedSpan); // Add the assigned span to the component;
+
+      return assignedSpan;
     }
   }, {
     key: "updateAssignedContent",
     value: function updateAssignedContent() {
+      var _this3 = this;
+
+      console.log("UAC", this.name);
       var lightDOM = this.sRoot.parentElement;
+      var unplacedNodes = Array.from(lightDOM.childNodes).filter(function (node) {
+        return node.parentNode === _this3.sRoot.parentElement; // return all nodes outside the <s-root>, they haven't been moved yet
+      });
       var content = [];
 
       if (this.name) {
         // Handle named slots
-        content = Array.from(lightDOM.querySelectorAll("*[slot=".concat(this.name, "]")));
+        content = unplacedNodes.filter(function (node) {
+          return node.nodeType !== Node.TEXT_NODE && node.getAttribute('slot') === _this3.name;
+        });
       } else {
         // Handle default slot content
-        content = Array.from(lightDOM.childNodes).filter(function (n) {
+        content = unplacedNodes.filter(function (n) {
           if (n.nodeType === Node.TEXT_NODE) {
             return n;
           } else if (!n.getAttribute('slot') && !n.tagName === 's-root') {
@@ -3988,12 +4029,22 @@ function (_HTMLElement2) {
         });
       }
 
-      if (content) {
+      if (content.length > 0) {
+        // Some slotable content was found, remove default content
         var fragment = document.createDocumentFragment();
         content.forEach(function (node) {
           fragment.appendChild(node);
         });
-        this.appendChild(fragment);
+        this.assignedWrapper.appendChild(fragment);
+
+        if (this.fallbackWrapper) {
+          this.fallbackWrapper.setAttribute('hidden', true);
+          this.assignedWrapper.removeAttribute('hidden');
+        }
+      } else if (this.fallbackWrapper && this.assignedWrapper.childNodes.length === 0) {
+        // If there are no unplaced nodes that need to go into this <s-slot> and the <s-slot> is empty, then show the fallbackWrapper
+        this.fallbackWrapper.removeAttribute('hidden');
+        this.assignedWrapper.setAttribute('hidden', true);
       }
     }
   }]);
@@ -4007,26 +4058,26 @@ function (_LitElement) {
   _inherits(Slotify, _LitElement);
 
   function Slotify() {
-    var _this3;
+    var _this4;
 
     _classCallCheck(this, Slotify);
 
-    _this3 = _possibleConstructorReturn(this, _getPrototypeOf(Slotify).call(this));
+    _this4 = _possibleConstructorReturn(this, _getPrototypeOf(Slotify).call(this));
+
+    if (!customElements.get('s-root')) {
+      customElements.define('s-root', SRoot);
+    }
 
     if (!customElements.get('s-slot')) {
       customElements.define('s-slot', SSlot);
     }
 
-    return _this3;
+    return _this4;
   }
 
   _createClass(Slotify, [{
     key: "createRenderRoot",
     value: function createRenderRoot() {
-      if (!customElements.get('s-root')) {
-        customElements.define('s-root', SRoot);
-      }
-
       return document.createElement('s-root');
     }
   }, {
