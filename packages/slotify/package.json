@@ -5,6 +5,10 @@
   "main": "./src/slotify.js",
   "author": "Kevin Powell <kevinmpowell@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/EightShapes/slotify.git"
+  },
   "devDependencies": {
     "eslint": "^6.1.0",
     "eslint-config-prettier": "^6.0.0",
