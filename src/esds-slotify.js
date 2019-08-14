@@ -12,11 +12,12 @@ export class SSlot extends HTMLElement {
   }
 
   connectedCallback() {
+    console.log("CONNECTING", this.name);
     this.sRoot = this.closest('s-root');
 
-    // Observer the "Light DOM" of the component
-    const lightDomObserver = new MutationObserver(() => this.updateAssignedContent());
-    lightDomObserver.observe(this.sRoot.parentElement, {childList: true});
+    // Observe the "Light DOM" of the component, to detect when new nodes are added and assign them to the <s-slot> if necessary
+    this.lightDomObserver = new MutationObserver(() => this.updateAssignedContent());
+    this.lightDomObserver.observe(this.sRoot.parentElement, {childList: true});
 
     // Create assigned content and fallback content wrappers
     this.fallbackWrapper = this.fallbackWrapper || this.createFallbackWrapper();
@@ -24,11 +25,15 @@ export class SSlot extends HTMLElement {
 
     // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
     const assignedContentObserver = new MutationObserver(() => {
-      this.updateAssignedContent();
+      this.updateEmptySlot(); // This is an observer on the actual <s-slot>
     });
     assignedContentObserver.observe(this.assignedWrapper, {childList: true});
 
     this.updateAssignedContent();
+  }
+
+  disconnectedCallback() {
+    this.lightDomObserver.disconnect(); // don't let observers pile up
   }
 
   createFallbackWrapper() {
@@ -39,11 +44,10 @@ export class SSlot extends HTMLElement {
     } else {
       const fallbackSpan = document.createElement('span');
       fallbackSpan.classList.add('fallback-content');
-      this.childNodes.forEach(node => {
+      Array.from(this.childNodes).forEach(node => {
         fallbackSpan.appendChild(node);
       });
       this.appendChild(fallbackSpan); // Add the fallback span to the component;
-      fallbackSpan.setAttribute('hidden', true);
       return fallbackSpan;
     }
   }
@@ -55,8 +59,7 @@ export class SSlot extends HTMLElement {
     return assignedSpan;
   }
 
-  updateAssignedContent() {
-    console.log("UAC", this.name);
+  updateAssignedContent(checkForEmptySlot=false) {
     const lightDOM = this.sRoot.parentElement;
     const unplacedNodes = Array.from(lightDOM.childNodes).filter(node => {
       return node.parentNode === this.sRoot.parentElement; // return all nodes outside the <s-root>, they haven't been moved yet
@@ -89,12 +92,15 @@ export class SSlot extends HTMLElement {
       this.assignedWrapper.appendChild(fragment);
       if (this.fallbackWrapper) {
         this.fallbackWrapper.setAttribute('hidden', true);
-        this.assignedWrapper.removeAttribute('hidden');
+        this.assignedWrapper.removeAttribute('hidden'); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
       }
-    } else if (this.fallbackWrapper && this.assignedWrapper.childNodes.length === 0) {
-      // If there are no unplaced nodes that need to go into this <s-slot> and the <s-slot> is empty, then show the fallbackWrapper
+    }
+  }
+
+  updateEmptySlot() {
+    if (this.fallbackWrapper && this.assignedWrapper.childNodes.length === 0) {
       this.fallbackWrapper.removeAttribute('hidden');
-      this.assignedWrapper.setAttribute('hidden', true);
+      this.assignedWrapper.setAttribute('hidden', true); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
     }
   }
 }
@@ -112,10 +118,12 @@ export class Slotify extends LitElement {
   }
 
   createRenderRoot() {
+    // Wrap the entire rendered output in an <s-root> element
     return document.createElement('s-root');
   }
 
   connectedCallback() {
+    // Ensure the contents are wrapped in the <s-root> element
     if (!this.renderRoot.parentElement) {
       this.appendChild(this.renderRoot);
     }

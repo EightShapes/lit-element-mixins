@@ -25,15 +25,26 @@
       </li>
       <li>Babel is needed to compile the ES6 code down to ES5 code so IE11 will work</li>
     </ol>
-    <my-cheeseburger>
-      <div slot="bottom-bun">BUN BOTTOM</div>
-      <div slot="top-bun">BUN TOP</div>
-      Meat, pickles, lettuce, tomato
-      <div slot="cheese">CHEESE</div>
-    </my-cheeseburger>
+    <div style="display: flex">
+      <div>
+        <div id="table" style="border: solid 1px red; width: 200px; min-height: 200px;">
+          <my-cheeseburger>
+            <div slot="bottom-bun">BUN BOTTOM</div>
+            <div slot="top-bun">BUN TOP</div>
+            Meat, pickles, lettuce, tomato
+            <div slot="cheese">CHEESE</div>
+          </my-cheeseburger>
+        </div>
 
-    <button class="add-cheese">Add Extra Cheese</button>
-    <button class="remove-cheese">Remove Cheese</button>
+        <div id="bag" style="border: solid 1px black; width: 200px; min-height: 200px;"></div>
+      </div>
+      <div>
+        <button class="add-cheese">Add Extra Cheese</button>
+        <button class="remove-cheese">Remove Cheese</button>
+        <button class="move-it">Move the Burger</button>
+      </div>
+    </div>
+
 
     <script>
       const button = document.querySelector('.add-cheese');
@@ -50,6 +61,19 @@
         const cheese = burger.querySelector('*[slot="cheese"]');
         if (cheese) {
           cheese.parentElement.removeChild(cheese);
+        }
+      });
+
+      // Move the custom element
+      const bag = document.getElementById('bag');
+      const table = document.getElementById('table');
+      const moveItButton = document.querySelector('.move-it');
+      moveItButton.addEventListener('click', function(){
+        console.log(burger);
+        if (table.querySelector('my-cheeseburger')) {
+          bag.appendChild(burger);
+        } else {
+          table.appendChild(burger);
         }
       });
     </script>

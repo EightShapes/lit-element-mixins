@@ -3953,12 +3953,13 @@ function (_HTMLElement2) {
     value: function connectedCallback() {
       var _this2 = this;
 
-      this.sRoot = this.closest('s-root'); // Observer the "Light DOM" of the component
+      console.log("CONNECTING", this.name);
+      this.sRoot = this.closest('s-root'); // Observe the "Light DOM" of the component, to detect when new nodes are added and assign them to the <s-slot> if necessary
 
-      var lightDomObserver = new MutationObserver(function () {
+      this.lightDomObserver = new MutationObserver(function () {
         return _this2.updateAssignedContent();
       });
-      lightDomObserver.observe(this.sRoot.parentElement, {
+      this.lightDomObserver.observe(this.sRoot.parentElement, {
         childList: true
       }); // Create assigned content and fallback content wrappers
 
@@ -3966,12 +3967,29 @@ function (_HTMLElement2) {
       this.assignedWrapper = this.assignedWrapper || this.createAssignedWrapper(); // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
 
       var assignedContentObserver = new MutationObserver(function () {
-        _this2.updateAssignedContent();
+        _this2.updateEmptySlot(); // This is an observer on the actual <s-slot>
+
       });
       assignedContentObserver.observe(this.assignedWrapper, {
         childList: true
       });
       this.updateAssignedContent();
+    }
+  }, {
+    key: "disconnectedCallback",
+    value: function disconnectedCallback() {
+      this.lightDomObserver.disconnect(); // don't let observers pile up
+      // console.log("DISCONNECTING", this.name);
+      // // Tear down the <s-root> and restore the component's DOM to its state prior to
+      // const element = this.sRoot.parentElement;
+      // console.log(element);
+      // const fragment = document.createDocumentFragment();
+      //
+      // const contents = Array.from(this.assignedWrapper.childNodes);
+      // contents.forEach(node => fragment.appendChild(node));
+      // element.appendChild(fragment);
+      //
+      // this.sRoot = null;
     }
   }, {
     key: "createFallbackWrapper",
@@ -3983,12 +4001,11 @@ function (_HTMLElement2) {
       } else {
         var fallbackSpan = document.createElement('span');
         fallbackSpan.classList.add('fallback-content');
-        this.childNodes.forEach(function (node) {
+        Array.from(this.childNodes).forEach(function (node) {
           fallbackSpan.appendChild(node);
         });
         this.appendChild(fallbackSpan); // Add the fallback span to the component;
 
-        fallbackSpan.setAttribute('hidden', true);
         return fallbackSpan;
       }
     }
@@ -4005,8 +4022,6 @@ function (_HTMLElement2) {
     key: "updateAssignedContent",
     value: function updateAssignedContent() {
       var _this3 = this;
-
-      console.log("UAC", this.name);
       var lightDOM = this.sRoot.parentElement;
       var unplacedNodes = Array.from(lightDOM.childNodes).filter(function (node) {
         return node.parentNode === _this3.sRoot.parentElement; // return all nodes outside the <s-root>, they haven't been moved yet
@@ -4039,12 +4054,16 @@ function (_HTMLElement2) {
 
         if (this.fallbackWrapper) {
           this.fallbackWrapper.setAttribute('hidden', true);
-          this.assignedWrapper.removeAttribute('hidden');
+          this.assignedWrapper.removeAttribute('hidden'); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
         }
-      } else if (this.fallbackWrapper && this.assignedWrapper.childNodes.length === 0) {
-        // If there are no unplaced nodes that need to go into this <s-slot> and the <s-slot> is empty, then show the fallbackWrapper
+      }
+    }
+  }, {
+    key: "updateEmptySlot",
+    value: function updateEmptySlot() {
+      if (this.fallbackWrapper && this.assignedWrapper.childNodes.length === 0) {
         this.fallbackWrapper.removeAttribute('hidden');
-        this.assignedWrapper.setAttribute('hidden', true);
+        this.assignedWrapper.setAttribute('hidden', true); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
       }
     }
   }]);
@@ -4078,11 +4097,13 @@ function (_LitElement) {
   _createClass(Slotify, [{
     key: "createRenderRoot",
     value: function createRenderRoot() {
+      // Wrap the entire rendered output in an <s-root> element
       return document.createElement('s-root');
     }
   }, {
     key: "connectedCallback",
     value: function connectedCallback() {
+      // Ensure the contents are wrapped in the <s-root> element
       if (!this.renderRoot.parentElement) {
         this.appendChild(this.renderRoot);
       }
@@ -4116,4 +4137,22 @@ function (_Slotify) {
 
 if (window.customElements.get('my-cheeseburger') === undefined) {
   window.customElements.define('my-cheeseburger', MyCheeseburger);
+}
+
+// closest() polyfill
+if (!Element.prototype.matches) {
+  Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+}
+
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function (s) {
+    var el = this;
+
+    do {
+      if (el.matches(s)) return el;
+      el = el.parentElement || el.parentNode;
+    } while (el !== null && el.nodeType === 1);
+
+    return null;
+  };
 }
