@@ -3920,23 +3920,10 @@ function _templateObject() {
 
   return data;
 }
-var SRoot =
-/*#__PURE__*/
-function (_HTMLElement) {
-  _inherits(SRoot, _HTMLElement);
-
-  function SRoot() {
-    _classCallCheck(this, SRoot);
-
-    return _possibleConstructorReturn(this, _getPrototypeOf(SRoot).apply(this, arguments));
-  }
-
-  return SRoot;
-}(_wrapNativeSuper(HTMLElement));
 var SSlot =
 /*#__PURE__*/
-function (_HTMLElement2) {
-  _inherits(SSlot, _HTMLElement2);
+function (_HTMLElement) {
+  _inherits(SSlot, _HTMLElement);
 
   function SSlot() {
     var _this;
@@ -3979,44 +3966,67 @@ function (_HTMLElement2) {
     key: "disconnectedCallback",
     value: function disconnectedCallback() {
       this.lightDomObserver.disconnect(); // don't let observers pile up
-      // console.log("DISCONNECTING", this.name);
-      // // Tear down the <s-root> and restore the component's DOM to its state prior to
-      // const element = this.sRoot.parentElement;
-      // console.log(element);
-      // const fragment = document.createDocumentFragment();
-      //
-      // const contents = Array.from(this.assignedWrapper.childNodes);
-      // contents.forEach(node => fragment.appendChild(node));
-      // element.appendChild(fragment);
-      //
-      // this.sRoot = null;
     }
   }, {
     key: "createFallbackWrapper",
     value: function createFallbackWrapper() {
-      // This is only called once, get the contents of this <s-slot> and wrap them in a span
+      if (!customElements.get('s-fallback-wrapper')) {
+        var SFallbackWrapper =
+        /*#__PURE__*/
+        function (_HTMLElement2) {
+          _inherits(SFallbackWrapper, _HTMLElement2);
+
+          function SFallbackWrapper() {
+            _classCallCheck(this, SFallbackWrapper);
+
+            return _possibleConstructorReturn(this, _getPrototypeOf(SFallbackWrapper).apply(this, arguments));
+          }
+
+          return SFallbackWrapper;
+        }(_wrapNativeSuper(HTMLElement));
+
+        customElements.define('s-fallback-wrapper', SFallbackWrapper);
+      } // This is only called once, get the contents of this <s-slot> and wrap them in a span
+
+
       if (this.childNodes.length === 0) {
         // there's no default content, don't create the wrapper
         return false;
       } else {
-        var fallbackSpan = document.createElement('span');
-        fallbackSpan.classList.add('fallback-content');
+        var fallbackWrapper = document.createElement('s-fallback-wrapper');
         Array.from(this.childNodes).forEach(function (node) {
-          fallbackSpan.appendChild(node);
+          fallbackWrapper.appendChild(node);
         });
-        this.appendChild(fallbackSpan); // Add the fallback span to the component;
+        this.appendChild(fallbackWrapper); // Add the fallback span to the component;
 
-        return fallbackSpan;
+        return fallbackWrapper;
       }
     }
   }, {
     key: "createAssignedWrapper",
     value: function createAssignedWrapper() {
-      var assignedSpan = document.createElement('span');
-      assignedSpan.classList.add('assigned-content');
-      this.appendChild(assignedSpan); // Add the assigned span to the component;
+      if (!customElements.get('s-assigned-wrapper')) {
+        var SAssignedWrapper =
+        /*#__PURE__*/
+        function (_HTMLElement3) {
+          _inherits(SAssignedWrapper, _HTMLElement3);
 
-      return assignedSpan;
+          function SAssignedWrapper() {
+            _classCallCheck(this, SAssignedWrapper);
+
+            return _possibleConstructorReturn(this, _getPrototypeOf(SAssignedWrapper).apply(this, arguments));
+          }
+
+          return SAssignedWrapper;
+        }(_wrapNativeSuper(HTMLElement));
+
+        customElements.define('s-assigned-wrapper', SAssignedWrapper);
+      }
+
+      var assignedWrapper = document.createElement('s-assigned-wrapper');
+      this.appendChild(assignedWrapper); // Add the assigned span to the component;
+
+      return assignedWrapper;
     }
   }, {
     key: "updateAssignedContent",
@@ -4084,6 +4094,20 @@ function (_LitElement) {
     _this4 = _possibleConstructorReturn(this, _getPrototypeOf(Slotify).call(this));
 
     if (!customElements.get('s-root')) {
+      var SRoot =
+      /*#__PURE__*/
+      function (_HTMLElement4) {
+        _inherits(SRoot, _HTMLElement4);
+
+        function SRoot() {
+          _classCallCheck(this, SRoot);
+
+          return _possibleConstructorReturn(this, _getPrototypeOf(SRoot).apply(this, arguments));
+        }
+
+        return SRoot;
+      }(_wrapNativeSuper(HTMLElement));
+
       customElements.define('s-root', SRoot);
     }
 

@@ -2347,15 +2347,10 @@ LitElement['finalized'] = true;
 LitElement.render = render$1;
 //# sourceMappingURL=lit-element.js.map
 
-class SRoot extends HTMLElement {
-  // I am Sroot!
-}
-
 class SSlot extends HTMLElement {
   constructor() {
     super();
     this.name = this.getAttribute('name');
-
   }
 
   connectedCallback() {
@@ -2381,40 +2376,35 @@ class SSlot extends HTMLElement {
 
   disconnectedCallback() {
     this.lightDomObserver.disconnect(); // don't let observers pile up
-    // console.log("DISCONNECTING", this.name);
-    // // Tear down the <s-root> and restore the component's DOM to its state prior to
-    // const element = this.sRoot.parentElement;
-    // console.log(element);
-    // const fragment = document.createDocumentFragment();
-    //
-    // const contents = Array.from(this.assignedWrapper.childNodes);
-    // contents.forEach(node => fragment.appendChild(node));
-    // element.appendChild(fragment);
-    //
-    // this.sRoot = null;
   }
 
   createFallbackWrapper() {
+    if (!customElements.get('s-fallback-wrapper')) {
+      const SFallbackWrapper = class extends HTMLElement {};
+      customElements.define('s-fallback-wrapper', SFallbackWrapper);
+    }
     // This is only called once, get the contents of this <s-slot> and wrap them in a span
     if (this.childNodes.length === 0) {
       // there's no default content, don't create the wrapper
       return false;
     } else {
-      const fallbackSpan = document.createElement('span');
-      fallbackSpan.classList.add('fallback-content');
+      const fallbackWrapper = document.createElement('s-fallback-wrapper');
       Array.from(this.childNodes).forEach(node => {
-        fallbackSpan.appendChild(node);
+        fallbackWrapper.appendChild(node);
       });
-      this.appendChild(fallbackSpan); // Add the fallback span to the component;
-      return fallbackSpan;
+      this.appendChild(fallbackWrapper); // Add the fallback span to the component;
+      return fallbackWrapper;
     }
   }
 
   createAssignedWrapper() {
-    const assignedSpan = document.createElement('span');
-    assignedSpan.classList.add('assigned-content');
-    this.appendChild(assignedSpan); // Add the assigned span to the component;
-    return assignedSpan;
+    if (!customElements.get('s-assigned-wrapper')) {
+      const SAssignedWrapper = class extends HTMLElement {};
+      customElements.define('s-assigned-wrapper', SAssignedWrapper);
+    }
+    const assignedWrapper = document.createElement('s-assigned-wrapper');
+    this.appendChild(assignedWrapper); // Add the assigned span to the component;
+    return assignedWrapper;
   }
 
   updateAssignedContent(checkForEmptySlot=false) {
@@ -2468,6 +2458,7 @@ class Slotify extends LitElement {
   constructor() {
     super();
     if (!customElements.get('s-root')) {
+      const SRoot = class extends HTMLElement {};
       customElements.define('s-root', SRoot);
     }
     if (!customElements.get('s-slot')) {
