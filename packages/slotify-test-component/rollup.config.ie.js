@@ -3,9 +3,9 @@ import resolve from 'rollup-plugin-node-resolve';
 import babel from 'rollup-plugin-babel';
 
 export default {
-  input: 'src/esds-slotify-entry-legacy.js',
+  input: 'src/slotify-test-component-entry-legacy.js',
   output: {
-    file: 'dist/esds-slotify-legacy.js',
+    file: 'dist/slotify-test-component-legacy.js',
     format: 'cjs'
   },
   plugins: [

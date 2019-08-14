@@ -3,9 +3,9 @@
 import resolve from 'rollup-plugin-node-resolve';
 
 export default {
-  input: 'src/esds-slotify-entry.js',
+  input: 'src/slotify-test-component-entry.js',
   output: {
-    file: 'dist/esds-slotify.js',
+    file: 'dist/slotify-test-component.js',
     format: 'esm'
   },
   plugins: [

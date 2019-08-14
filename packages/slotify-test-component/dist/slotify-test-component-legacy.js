@@ -3911,8 +3911,247 @@ LitElement['finalized'] = true;
 
 LitElement.render = render$1;
 
+var Slotify = function Slotify(superclass) {
+  return (
+    /*#__PURE__*/
+    function (_superclass) {
+      _inherits(_class, _superclass);
+
+      function _class() {
+        var _this;
+
+        _classCallCheck(this, _class);
+
+        _this = _possibleConstructorReturn(this, _getPrototypeOf(_class).call(this));
+
+        if (!customElements.get('s-root')) {
+          var SRoot =
+          /*#__PURE__*/
+          function (_HTMLElement) {
+            _inherits(SRoot, _HTMLElement);
+
+            function SRoot() {
+              _classCallCheck(this, SRoot);
+
+              return _possibleConstructorReturn(this, _getPrototypeOf(SRoot).apply(this, arguments));
+            }
+
+            return SRoot;
+          }(_wrapNativeSuper(HTMLElement));
+
+          customElements.define('s-root', SRoot);
+        }
+
+        if (!customElements.get('s-slot')) {
+          var SSlot =
+          /*#__PURE__*/
+          function (_HTMLElement2) {
+            _inherits(SSlot, _HTMLElement2);
+
+            function SSlot() {
+              var _this2;
+
+              _classCallCheck(this, SSlot);
+
+              _this2 = _possibleConstructorReturn(this, _getPrototypeOf(SSlot).call(this));
+              _this2.name = _this2.getAttribute('name');
+              return _this2;
+            }
+
+            _createClass(SSlot, [{
+              key: "connectedCallback",
+              value: function connectedCallback() {
+                var _this3 = this;
+
+                // closest() polyfill for IE11
+                if (!Element.prototype.matches) {
+                  Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+                }
+
+                if (!Element.prototype.closest) {
+                  Element.prototype.closest = function (s) {
+                    var el = this;
+
+                    do {
+                      if (el.matches(s)) return el;
+                      el = el.parentElement || el.parentNode;
+                    } while (el !== null && el.nodeType === 1);
+
+                    return null;
+                  };
+                }
+
+                this.sRoot = this.closest('s-root'); // Observe the "Light DOM" of the component, to detect when new nodes are added and assign them to the <s-slot> if necessary
+
+                this.lightDomObserver = new MutationObserver(function () {
+                  return _this3.updateAssignedContent();
+                });
+                this.lightDomObserver.observe(this.sRoot.parentElement, {
+                  childList: true
+                }); // Create assigned content and fallback content wrappers
+
+                this.fallbackWrapper = this.fallbackWrapper || this.createFallbackWrapper();
+                this.assignedWrapper = this.assignedWrapper || this.createAssignedWrapper(); // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
+
+                var assignedContentObserver = new MutationObserver(function () {
+                  _this3.updateEmptySlot(); // This is an observer on the actual <s-slot>
+
+                });
+                assignedContentObserver.observe(this.assignedWrapper, {
+                  childList: true
+                });
+                this.updateAssignedContent();
+              }
+            }, {
+              key: "disconnectedCallback",
+              value: function disconnectedCallback() {
+                this.lightDomObserver.disconnect(); // don't let observers pile up
+              }
+            }, {
+              key: "createFallbackWrapper",
+              value: function createFallbackWrapper() {
+                if (!customElements.get('s-fallback-wrapper')) {
+                  var SFallbackWrapper =
+                  /*#__PURE__*/
+                  function (_HTMLElement3) {
+                    _inherits(SFallbackWrapper, _HTMLElement3);
+
+                    function SFallbackWrapper() {
+                      _classCallCheck(this, SFallbackWrapper);
+
+                      return _possibleConstructorReturn(this, _getPrototypeOf(SFallbackWrapper).apply(this, arguments));
+                    }
+
+                    return SFallbackWrapper;
+                  }(_wrapNativeSuper(HTMLElement));
+
+                  customElements.define('s-fallback-wrapper', SFallbackWrapper);
+                } // This is only called once, get the contents of this <s-slot> and wrap them in a span
+
+
+                if (this.childNodes.length === 0) {
+                  // there's no default content, don't create the wrapper
+                  return false;
+                } else {
+                  var fallbackWrapper = document.createElement('s-fallback-wrapper');
+                  Array.from(this.childNodes).forEach(function (node) {
+                    fallbackWrapper.appendChild(node);
+                  });
+                  this.appendChild(fallbackWrapper); // Add the fallback span to the component;
+
+                  return fallbackWrapper;
+                }
+              }
+            }, {
+              key: "createAssignedWrapper",
+              value: function createAssignedWrapper() {
+                if (!customElements.get('s-assigned-wrapper')) {
+                  var SAssignedWrapper =
+                  /*#__PURE__*/
+                  function (_HTMLElement4) {
+                    _inherits(SAssignedWrapper, _HTMLElement4);
+
+                    function SAssignedWrapper() {
+                      _classCallCheck(this, SAssignedWrapper);
+
+                      return _possibleConstructorReturn(this, _getPrototypeOf(SAssignedWrapper).apply(this, arguments));
+                    }
+
+                    return SAssignedWrapper;
+                  }(_wrapNativeSuper(HTMLElement));
+
+                  customElements.define('s-assigned-wrapper', SAssignedWrapper);
+                }
+
+                var assignedWrapper = document.createElement('s-assigned-wrapper');
+                this.appendChild(assignedWrapper); // Add the assigned span to the component;
+
+                return assignedWrapper;
+              }
+            }, {
+              key: "updateAssignedContent",
+              value: function updateAssignedContent() {
+                var _this4 = this;
+                var lightDOM = this.sRoot.parentElement;
+                var unplacedNodes = Array.from(lightDOM.childNodes).filter(function (node) {
+                  return node.parentNode === _this4.sRoot.parentElement && node !== _this4.sRoot; // return all nodes outside the <s-root>, they haven't been moved yet
+                });
+                var content = [];
+
+                if (this.name) {
+                  // Handle named slots
+                  content = unplacedNodes.filter(function (node) {
+                    return node.nodeType !== Node.TEXT_NODE && node.getAttribute('slot') === _this4.name;
+                  });
+                } else {
+                  // Handle default slot content
+                  content = unplacedNodes.filter(function (n) {
+                    if (n.nodeType === Node.TEXT_NODE) {
+                      return n;
+                    } else if (!n.getAttribute('slot')) {
+                      return n;
+                    }
+                  });
+                }
+
+                if (content.length > 0) {
+                  // Some slotable content was found, remove default content
+                  var fragment = document.createDocumentFragment();
+                  content.forEach(function (node) {
+                    fragment.appendChild(node);
+                  });
+                  this.assignedWrapper.appendChild(fragment);
+
+                  if (this.fallbackWrapper) {
+                    this.fallbackWrapper.setAttribute('hidden', true);
+                    this.assignedWrapper.removeAttribute('hidden'); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
+                  }
+                }
+              }
+            }, {
+              key: "updateEmptySlot",
+              value: function updateEmptySlot() {
+                if (this.fallbackWrapper && this.assignedWrapper.childNodes.length === 0) {
+                  this.fallbackWrapper.removeAttribute('hidden');
+                  this.assignedWrapper.setAttribute('hidden', true); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
+                }
+              }
+            }]);
+
+            return SSlot;
+          }(_wrapNativeSuper(HTMLElement));
+
+          customElements.define('s-slot', SSlot);
+        }
+
+        return _this;
+      }
+
+      _createClass(_class, [{
+        key: "createRenderRoot",
+        value: function createRenderRoot() {
+          // Wrap the entire rendered output in an <s-root> element
+          return document.createElement('s-root');
+        }
+      }, {
+        key: "connectedCallback",
+        value: function connectedCallback() {
+          // Ensure the contents are wrapped in the <s-root> element
+          if (!this.renderRoot.parentElement) {
+            this.appendChild(this.renderRoot);
+          }
+
+          _get(_getPrototypeOf(_class.prototype), "connectedCallback", this).call(this);
+        }
+      }]);
+
+      return _class;
+    }(superclass)
+  );
+};
+
 function _templateObject() {
-  var data = _taggedTemplateLiteral(["\n      <h1 class=\"esds-slotify\">Welcome to Burgersville</h1>\n      <s-slot name=\"top-bun\"></s-slot>\n      <s-slot name=\"cheese\">No cheese? So sad :(</s-slot>\n      <s-slot></s-slot>\n      <br/>\n      <s-slot name=\"special-sauce\">Some default special sauce</s-slot>\n      <s-slot name=\"bottom-bun\"></s-slot>\n      <h2>PLATE FOR THE BURGER</h2>\n    "]);
+  var data = _taggedTemplateLiteral(["\n      <div class=\"burger-wrap\">\n        <s-slot name=\"bun-top\"></s-slot>\n        <s-slot name=\"cheese\">DEFAULT CHEESE</s-slot>\n        <s-slot></s-slot>\n        <s-slot name=\"bun-bottom\"></s-slot>\n        <div class=\"burger-plate\">Burger Plate</div>\n      </div>\n    "]);
 
   _templateObject = function _templateObject() {
     return data;
@@ -3920,263 +4159,27 @@ function _templateObject() {
 
   return data;
 }
-var SSlot =
-/*#__PURE__*/
-function (_HTMLElement) {
-  _inherits(SSlot, _HTMLElement);
-
-  function SSlot() {
-    var _this;
-
-    _classCallCheck(this, SSlot);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(SSlot).call(this));
-    _this.name = _this.getAttribute('name');
-    return _this;
-  }
-
-  _createClass(SSlot, [{
-    key: "connectedCallback",
-    value: function connectedCallback() {
-      var _this2 = this;
-
-      console.log("CONNECTING", this.name);
-      this.sRoot = this.closest('s-root'); // Observe the "Light DOM" of the component, to detect when new nodes are added and assign them to the <s-slot> if necessary
-
-      this.lightDomObserver = new MutationObserver(function () {
-        return _this2.updateAssignedContent();
-      });
-      this.lightDomObserver.observe(this.sRoot.parentElement, {
-        childList: true
-      }); // Create assigned content and fallback content wrappers
-
-      this.fallbackWrapper = this.fallbackWrapper || this.createFallbackWrapper();
-      this.assignedWrapper = this.assignedWrapper || this.createAssignedWrapper(); // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
-
-      var assignedContentObserver = new MutationObserver(function () {
-        _this2.updateEmptySlot(); // This is an observer on the actual <s-slot>
-
-      });
-      assignedContentObserver.observe(this.assignedWrapper, {
-        childList: true
-      });
-      this.updateAssignedContent();
-    }
-  }, {
-    key: "disconnectedCallback",
-    value: function disconnectedCallback() {
-      this.lightDomObserver.disconnect(); // don't let observers pile up
-    }
-  }, {
-    key: "createFallbackWrapper",
-    value: function createFallbackWrapper() {
-      if (!customElements.get('s-fallback-wrapper')) {
-        var SFallbackWrapper =
-        /*#__PURE__*/
-        function (_HTMLElement2) {
-          _inherits(SFallbackWrapper, _HTMLElement2);
-
-          function SFallbackWrapper() {
-            _classCallCheck(this, SFallbackWrapper);
-
-            return _possibleConstructorReturn(this, _getPrototypeOf(SFallbackWrapper).apply(this, arguments));
-          }
-
-          return SFallbackWrapper;
-        }(_wrapNativeSuper(HTMLElement));
-
-        customElements.define('s-fallback-wrapper', SFallbackWrapper);
-      } // This is only called once, get the contents of this <s-slot> and wrap them in a span
-
-
-      if (this.childNodes.length === 0) {
-        // there's no default content, don't create the wrapper
-        return false;
-      } else {
-        var fallbackWrapper = document.createElement('s-fallback-wrapper');
-        Array.from(this.childNodes).forEach(function (node) {
-          fallbackWrapper.appendChild(node);
-        });
-        this.appendChild(fallbackWrapper); // Add the fallback span to the component;
-
-        return fallbackWrapper;
-      }
-    }
-  }, {
-    key: "createAssignedWrapper",
-    value: function createAssignedWrapper() {
-      if (!customElements.get('s-assigned-wrapper')) {
-        var SAssignedWrapper =
-        /*#__PURE__*/
-        function (_HTMLElement3) {
-          _inherits(SAssignedWrapper, _HTMLElement3);
-
-          function SAssignedWrapper() {
-            _classCallCheck(this, SAssignedWrapper);
-
-            return _possibleConstructorReturn(this, _getPrototypeOf(SAssignedWrapper).apply(this, arguments));
-          }
-
-          return SAssignedWrapper;
-        }(_wrapNativeSuper(HTMLElement));
-
-        customElements.define('s-assigned-wrapper', SAssignedWrapper);
-      }
-
-      var assignedWrapper = document.createElement('s-assigned-wrapper');
-      this.appendChild(assignedWrapper); // Add the assigned span to the component;
-
-      return assignedWrapper;
-    }
-  }, {
-    key: "updateAssignedContent",
-    value: function updateAssignedContent() {
-      var _this3 = this;
-      var lightDOM = this.sRoot.parentElement;
-      var unplacedNodes = Array.from(lightDOM.childNodes).filter(function (node) {
-        return node.parentNode === _this3.sRoot.parentElement; // return all nodes outside the <s-root>, they haven't been moved yet
-      });
-      var content = [];
-
-      if (this.name) {
-        // Handle named slots
-        content = unplacedNodes.filter(function (node) {
-          return node.nodeType !== Node.TEXT_NODE && node.getAttribute('slot') === _this3.name;
-        });
-      } else {
-        // Handle default slot content
-        content = unplacedNodes.filter(function (n) {
-          if (n.nodeType === Node.TEXT_NODE) {
-            return n;
-          } else if (!n.getAttribute('slot') && !n.tagName === 's-root') {
-            return n;
-          }
-        });
-      }
-
-      if (content.length > 0) {
-        // Some slotable content was found, remove default content
-        var fragment = document.createDocumentFragment();
-        content.forEach(function (node) {
-          fragment.appendChild(node);
-        });
-        this.assignedWrapper.appendChild(fragment);
-
-        if (this.fallbackWrapper) {
-          this.fallbackWrapper.setAttribute('hidden', true);
-          this.assignedWrapper.removeAttribute('hidden'); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
-        }
-      }
-    }
-  }, {
-    key: "updateEmptySlot",
-    value: function updateEmptySlot() {
-      if (this.fallbackWrapper && this.assignedWrapper.childNodes.length === 0) {
-        this.fallbackWrapper.removeAttribute('hidden');
-        this.assignedWrapper.setAttribute('hidden', true); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
-      }
-    }
-  }]);
-
-  return SSlot;
-}(_wrapNativeSuper(HTMLElement)); // The Slotify Base Component
-
-var Slotify =
-/*#__PURE__*/
-function (_LitElement) {
-  _inherits(Slotify, _LitElement);
-
-  function Slotify() {
-    var _this4;
-
-    _classCallCheck(this, Slotify);
-
-    _this4 = _possibleConstructorReturn(this, _getPrototypeOf(Slotify).call(this));
-
-    if (!customElements.get('s-root')) {
-      var SRoot =
-      /*#__PURE__*/
-      function (_HTMLElement4) {
-        _inherits(SRoot, _HTMLElement4);
-
-        function SRoot() {
-          _classCallCheck(this, SRoot);
-
-          return _possibleConstructorReturn(this, _getPrototypeOf(SRoot).apply(this, arguments));
-        }
-
-        return SRoot;
-      }(_wrapNativeSuper(HTMLElement));
-
-      customElements.define('s-root', SRoot);
-    }
-
-    if (!customElements.get('s-slot')) {
-      customElements.define('s-slot', SSlot);
-    }
-
-    return _this4;
-  }
-
-  _createClass(Slotify, [{
-    key: "createRenderRoot",
-    value: function createRenderRoot() {
-      // Wrap the entire rendered output in an <s-root> element
-      return document.createElement('s-root');
-    }
-  }, {
-    key: "connectedCallback",
-    value: function connectedCallback() {
-      // Ensure the contents are wrapped in the <s-root> element
-      if (!this.renderRoot.parentElement) {
-        this.appendChild(this.renderRoot);
-      }
-
-      _get(_getPrototypeOf(Slotify.prototype), "connectedCallback", this).call(this);
-    }
-  }]);
-
-  return Slotify;
-}(LitElement);
-var MyCheeseburger =
+var SlotifyTestComponent =
 /*#__PURE__*/
 function (_Slotify) {
-  _inherits(MyCheeseburger, _Slotify);
+  _inherits(SlotifyTestComponent, _Slotify);
 
-  function MyCheeseburger() {
-    _classCallCheck(this, MyCheeseburger);
+  function SlotifyTestComponent() {
+    _classCallCheck(this, SlotifyTestComponent);
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(MyCheeseburger).apply(this, arguments));
+    return _possibleConstructorReturn(this, _getPrototypeOf(SlotifyTestComponent).apply(this, arguments));
   }
 
-  _createClass(MyCheeseburger, [{
+  _createClass(SlotifyTestComponent, [{
     key: "render",
     value: function render() {
       return html(_templateObject());
     }
   }]);
 
-  return MyCheeseburger;
-}(Slotify);
+  return SlotifyTestComponent;
+}(Slotify(LitElement));
 
-if (window.customElements.get('my-cheeseburger') === undefined) {
-  window.customElements.define('my-cheeseburger', MyCheeseburger);
-}
-
-// closest() polyfill
-if (!Element.prototype.matches) {
-  Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-}
-
-if (!Element.prototype.closest) {
-  Element.prototype.closest = function (s) {
-    var el = this;
-
-    do {
-      if (el.matches(s)) return el;
-      el = el.parentElement || el.parentNode;
-    } while (el !== null && el.nodeType === 1);
-
-    return null;
-  };
+if (window.customElements.get('slotify-test-component') === undefined) {
+  window.customElements.define('slotify-test-component', SlotifyTestComponent);
 }

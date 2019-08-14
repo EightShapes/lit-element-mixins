@@ -1,17 +1,33 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <!-- No Shadow DOM, so link directly to styles -->
-    <link rel="stylesheet" href="../../dist/esds-slotify.css"/>
-
     <!-- Separate webcomponents polyfill bundle for Edge, IE11, etc. -->
     <script type="text/javascript" src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
 
     <!-- The ESM "vanilla" version of the component for FF, Safari, Chrome and Edge -->
-    <script type="module" src="../../dist/esds-slotify.js"></script>
+    <script type="module" src="../../dist/slotify.js"></script>
 
     <!-- A babel-compiled version of the component for IE11 -->
-    <script nomodule type="text/javascript" src="../../dist/esds-slotify-legacy.js"></script>
+    <script nomodule type="text/javascript" src="../../dist/slotify-legacy.js"></script>
+
+    <script type="module">
+      import { Slotify } from "../../dist/slotify.js";
+      
+      export class MyCheeseburger extends Slotify(LitElement) {
+        render() {
+          return html`
+            <h1 class="esds-slotify">Welcome to Burgersville</h1>
+            <s-slot name="top-bun"></s-slot>
+            <s-slot name="cheese">No cheese? So sad :(</s-slot>
+            <s-slot></s-slot>
+            <br/>
+            <s-slot name="special-sauce">Some default special sauce</s-slot>
+            <s-slot name="bottom-bun"></s-slot>
+            <h2>PLATE FOR THE BURGER</h2>
+          `;
+        }
+      }
+    </script>
   </head>
   <body>
     <h1>Welcome to your new web component.</h1>
@@ -19,7 +35,7 @@
     <ol>
       <li><code>@webcomponents/webcomponentsjs</code> is needed to enable custom elements in IE11 and Edge 18 and lower</li>
       <li>
-        Rollup is needed because <code>esds-slotify-entry.js</code> uses an import statement to pull in the EsdsSlotify class from a separate file.<br/>
+        Rollup is needed because <code>slotify-entry.js</code> uses an import statement to pull in the EsdsSlotify class from a separate file.<br/>
         IE11 doesn't support JS imports so this rollup is needed to bundle those two files into one.<br/>
         Rollup is also used to create a bundle for modern browsers that includes LitElement and all its dependencies.
       </li>
