@@ -4,7 +4,7 @@
   "description": "A class mixin for LitElement that adds <slot> functionality to templates without using the ShadowDOM",
   "main": "./src/slotify.js",
   "author": "Kevin Powell <kevinmpowell@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/EightShapes/slotify.git"
