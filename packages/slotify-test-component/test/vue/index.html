@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <script src="https://unpkg.com/vue"></script>
+    <script type="module" src="../..//dist/slotify-test-component.js"></script>
+  </head>
+  <body>
+    <!--
+      To wire up Vue data to your custom element use the following syntax:
+      <myds-button :text="message"></myds-button>
+
+      Where 'text' is a prop supported by your button template.
+
+      To test <slot> functionality within your component use the following syntax:
+      <myds-button>{{ message }}</myds-button>
+     -->
+    <div id="app">
+      <slotify-test-component>
+        <div slot="bun-top">TOP BUN</div>
+        <div slot="cheese" v-for="cheese in cheeses">{{ cheese }}</div>
+        <div v-html="mainEvent">
+          {{ mainEvent }}
+        </div>
+        <div slot="bun-bottom">BOTTOM BUN</div>
+      </slotify-test-component>
+      <button @click="addCheese">Add Cheese</button>
+      <textarea v-model="mainEvent"></textarea>
+    </div>
+    <script>
+      Vue.config.ignoredElements = [
+        'slotify-test-component'
+      ];
+
+      const vueApp = new Vue({
+        el: '#app',
+        data: {
+          cheeses: ['Gorgonzola', 'Cheddar'],
+          mainEvent: 'LETTUCE<br/>TOMATO<br/>BEEF<br/>'
+        },
+        methods: {
+          addCheese() {
+            this.cheeses = ['Extra', 'Extra', 'Extra Cheese'];
+          }
+        }
+      });
+
+      // To change app data dynamically in the browser run the following in the browser console:
+      // vueApp.message = 'Foo';
+    </script>
+  </body>
+</html>

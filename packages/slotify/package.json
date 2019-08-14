@@ -4,5 +4,11 @@
   "description": "A class mixin for LitElement that adds <slot> functionality to templates without using the ShadowDOM",
   "main": "./src/slotify.js",
   "author": "Kevin Powell <kevinmpowell@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^6.1.0",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "prettier": "^1.18.2"
+  }
 }

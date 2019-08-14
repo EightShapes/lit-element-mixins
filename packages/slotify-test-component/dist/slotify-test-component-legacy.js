@@ -4072,6 +4072,7 @@ var Slotify = function Slotify(superclass) {
               key: "updateAssignedContent",
               value: function updateAssignedContent() {
                 var _this4 = this;
+
                 var lightDOM = this.sRoot.parentElement;
                 var unplacedNodes = Array.from(lightDOM.childNodes).filter(function (node) {
                   return node.parentNode === _this4.sRoot.parentElement && node !== _this4.sRoot; // return all nodes outside the <s-root>, they haven't been moved yet
