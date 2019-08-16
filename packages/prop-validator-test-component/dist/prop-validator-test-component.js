@@ -2405,7 +2405,7 @@ const PropValidator = (superclass, config) =>
           // Run all validators
           for (const validator of validators) {
             const response = validator(value);
-            const valid = response[0];
+            const valid = response[0] || response;
             const message = response[1];
             if (!valid) {
               if (config.consoleErrors) {
@@ -2439,21 +2439,31 @@ const PropValidator = (superclass, config) =>
     }
 
     generateValidator(type, data, prop) {
-      switch (type) {
-        case 'inclusion': {
-          return this.generateInclusionValidator(prop, data);
+      let conditional = data.if === undefined ? () => true : data.if.bind(this);
+      if (conditional()) {
+        switch (type) {
+          case 'inclusion': {
+            return this.generateInclusionValidator(prop, data);
+          }
+          case 'exclusion': {
+            return this.generateExclusionValidator(prop, data);
+          }
+          default: {
+            return () => {
+              console.warn(
+                `No validator named '${type}' exists. '${prop}' wasn't validated.`,
+              );
+              return true;
+            };
+          }
         }
-        case 'exclusion': {
-          return this.generateExclusionValidator(prop, data);
-        }
-        default: {
-          return () => {
-            console.warn(
-              `No validator named '${type}' exists. '${prop}' wasn't validated.`,
-            );
-            return true;
-          };
-        }
+      } else {
+        return () => {
+          console.info(
+            `Conditional for '${prop}' wasn't met. Validator skipped.`,
+          );
+          return true;
+        };
       }
     }
 
@@ -2476,12 +2486,8 @@ const PropValidator = (superclass, config) =>
         )}`;
         const message = this.getErrorMessage(value, prop, data, defaultMessage);
         let valid = true;
-        let conditional =
-          data.if === undefined ? () => true : data.if.bind(this);
 
-        if (conditional()) {
-          valid = data.values.indexOf(value) !== -1; // Run the validator
-        }
+        valid = data.values.indexOf(value) !== -1; // Run the validator
         return [valid, message];
       };
     }

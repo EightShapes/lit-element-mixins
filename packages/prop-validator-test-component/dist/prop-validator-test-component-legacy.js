@@ -4034,7 +4034,7 @@ var PropValidator = function PropValidator(superclass, config) {
                 for (var _iterator = validators[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                   var validator = _step.value;
                   var response = validator(value);
-                  var valid = response[0];
+                  var valid = response[0] || response;
                   var message = response[1];
 
                   if (!valid) {
@@ -4085,24 +4085,35 @@ var PropValidator = function PropValidator(superclass, config) {
       }, {
         key: "generateValidator",
         value: function generateValidator(type, data, prop) {
-          switch (type) {
-            case 'inclusion':
-              {
-                return this.generateInclusionValidator(prop, data);
-              }
+          var conditional = data["if"] === undefined ? function () {
+            return true;
+          } : data["if"].bind(this);
 
-            case 'exclusion':
-              {
-                return this.generateExclusionValidator(prop, data);
-              }
+          if (conditional()) {
+            switch (type) {
+              case 'inclusion':
+                {
+                  return this.generateInclusionValidator(prop, data);
+                }
 
-            default:
-              {
-                return function () {
-                  console.warn("No validator named '".concat(type, "' exists. '").concat(prop, "' wasn't validated."));
-                  return true;
-                };
-              }
+              case 'exclusion':
+                {
+                  return this.generateExclusionValidator(prop, data);
+                }
+
+              default:
+                {
+                  return function () {
+                    console.warn("No validator named '".concat(type, "' exists. '").concat(prop, "' wasn't validated."));
+                    return true;
+                  };
+                }
+            }
+          } else {
+            return function () {
+              console.info("Conditional for '".concat(prop, "' wasn't met. Validator skipped."));
+              return true;
+            };
           }
         }
       }, {
@@ -4129,13 +4140,7 @@ var PropValidator = function PropValidator(superclass, config) {
             var message = _this4.getErrorMessage(value, prop, data, defaultMessage);
 
             var valid = true;
-            var conditional = data["if"] === undefined ? function () {
-              return true;
-            } : data["if"].bind(_this4);
-
-            if (conditional()) {
-              valid = data.values.indexOf(value) !== -1; // Run the validator
-            }
+            valid = data.values.indexOf(value) !== -1; // Run the validator
 
             return [valid, message];
           };
