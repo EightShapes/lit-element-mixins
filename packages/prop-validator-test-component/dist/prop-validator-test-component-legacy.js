@@ -3947,15 +3947,7 @@ var PropValidator = function PropValidator(superclass) {
         }
 
         return _this;
-      } // getAllMethodNames(obj) {
-      //   let methods = new Set();
-      //   while ((obj = Reflect.getPrototypeOf(obj))) {
-      //     let keys = Reflect.ownKeys(obj);
-      //     keys.forEach(k => methods.add(k));
-      //   }
-      //   return methods;
-      // }
-
+      }
 
       _createClass(_class, [{
         key: "generateValidators",
@@ -3964,32 +3956,48 @@ var PropValidator = function PropValidator(superclass) {
 
           var validators = propData.validate.map(function (validatorData) {
             var validatorType = Object.keys(validatorData)[0];
-            return _this2.generateValidator(validatorType, validatorData, propName);
+            return _this2.generateValidator(validatorType, validatorData[validatorType], propName);
           });
 
           if (validators.length > 0) {
             Object.defineProperty(this, propName, {
               get: function get() {
-                return _get(_getPrototypeOf(_class.prototype), propName, _this2);
+                return Object.getOwnPropertyDescriptor(Object.getPrototypeOf(_this2), propName).get.call(_this2); // Call the existing getter
               },
               set: function set(value) {
+                // Run all validators
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
+
+                try {
+                  for (var _iterator = validators[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var valid = _step.value;
+
+                    if (!valid(value)) {
+                      return; // If any of the validators fail, bail out and don't set the property value
+                    }
+                  } // If all validators pass, call the existing getter
+
+                } catch (err) {
+                  _didIteratorError = true;
+                  _iteratorError = err;
+                } finally {
+                  try {
+                    if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+                      _iterator["return"]();
+                    }
+                  } finally {
+                    if (_didIteratorError) {
+                      throw _iteratorError;
+                    }
+                  }
+                }
+
                 Object.getOwnPropertyDescriptor(Object.getPrototypeOf(_this2), propName).set.call(_this2, value);
-                console.log('we have the comms', propName); // console.log(propName, super[propName]);
-                // super[propName].call(value);
-                // super[propName](value);
-                // this.super[propName] = value;
-                // const oldValue = this[`_${propName}`];
-                // this[`_${propName}`] = value;
-                // this.requestUpdate(propName, oldValue);
               }
             });
-          } // console.log(this);
-          // let obj = this;
-          // while ((obj = Object.getPrototypeOf(obj))) {
-          //   console.log(Object.getOwnPropertyDescriptors(obj));
-          // }
-          // console.log(obj);
-
+          }
         }
       }, {
         key: "generateValidator",
@@ -4005,7 +4013,13 @@ var PropValidator = function PropValidator(superclass) {
         key: "generateInclusionValidator",
         value: function generateInclusionValidator(prop, data) {
           return function (value) {
-            return data.includes(value);
+            var valid = data.includes(value);
+
+            if (!valid) {
+              console.error("'".concat(value, "' is an invalid value for '").concat(prop, "'. Must be one of: ").concat(data.join(', ')));
+            }
+
+            return valid;
           };
         }
       }]);

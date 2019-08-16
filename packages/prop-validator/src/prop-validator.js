@@ -26,48 +26,40 @@ export const PropValidator = superclass =>
       }
     }
 
-    // getAllMethodNames(obj) {
-    //   let methods = new Set();
-    //   while ((obj = Reflect.getPrototypeOf(obj))) {
-    //     let keys = Reflect.ownKeys(obj);
-    //     keys.forEach(k => methods.add(k));
-    //   }
-    //   return methods;
-    // }
-
     generateValidators(propName, propData) {
       const validators = propData.validate.map(validatorData => {
         const validatorType = Object.keys(validatorData)[0];
-        return this.generateValidator(validatorType, validatorData, propName);
+        return this.generateValidator(
+          validatorType,
+          validatorData[validatorType],
+          propName,
+        );
       });
 
       if (validators.length > 0) {
         Object.defineProperty(this, propName, {
           get: () => {
-            return super[propName];
+            return Object.getOwnPropertyDescriptor(
+              Object.getPrototypeOf(this),
+              propName,
+            ).get.call(this); // Call the existing getter
           },
           set: value => {
+            // Run all validators
+            for (const valid of validators) {
+              if (!valid(value)) {
+                return; // If any of the validators fail, bail out and don't set the property value
+              }
+            }
+
+            // If all validators pass, call the existing getter
             Object.getOwnPropertyDescriptor(
               Object.getPrototypeOf(this),
               propName,
             ).set.call(this, value);
-            console.log('we have the comms', propName);
-            // console.log(propName, super[propName]);
-            // super[propName].call(value);
-            // super[propName](value);
-            // this.super[propName] = value;
-            // const oldValue = this[`_${propName}`];
-            // this[`_${propName}`] = value;
-            // this.requestUpdate(propName, oldValue);
           },
         });
       }
-      // console.log(this);
-      // let obj = this;
-      // while ((obj = Object.getPrototypeOf(obj))) {
-      //   console.log(Object.getOwnPropertyDescriptors(obj));
-      // }
-      // console.log(obj);
     }
 
     generateValidator(type, data, prop) {
@@ -80,7 +72,15 @@ export const PropValidator = superclass =>
 
     generateInclusionValidator(prop, data) {
       return value => {
-        return data.includes(value);
+        const valid = data.includes(value);
+        if (!valid) {
+          console.error(
+            `'${value}' is an invalid value for '${prop}'. Must be one of: ${data.join(
+              ', ',
+            )}`,
+          );
+        }
+        return valid;
       };
     }
   };
