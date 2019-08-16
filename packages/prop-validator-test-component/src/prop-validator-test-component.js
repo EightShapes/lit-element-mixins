@@ -12,6 +12,10 @@ export class PropValidatorTestComponent extends PropValidator(LitElement) {
         type: String,
         validate: [{ inclusion: ['unicorn', 'pirate', 'ninja'] }],
       },
+      variation: {
+        type: String,
+        validate: [{ exclusion: ['thorns', 'thistles'] }],
+      },
     };
   }
 
@@ -20,21 +24,19 @@ export class PropValidatorTestComponent extends PropValidator(LitElement) {
   }
 
   set size(value) {
-    console.log('size be settin');
+    console.log('Custom setter still runs');
     const oldValue = this._size;
     this._size = value;
     this.requestUpdate('size', oldValue);
   }
 
-  somethingRandom() {
-    console.log('HERE');
-  }
-
   render() {
     return html`
-      <h1 class="prop-validator-test-component">
-        Hi, I'm the prop-validator-test-component component. ${this.size}
-      </h1>
+      <p class="prop-validator-test-component">
+        Size: ${this.size}<br />
+        Name: ${this.name}<br />
+        Variation: ${this.variation}
+      </p>
     `;
   }
 }

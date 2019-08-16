@@ -3972,9 +3972,13 @@ var PropValidator = function PropValidator(superclass) {
 
                 try {
                   for (var _iterator = validators[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var valid = _step.value;
+                    var validator = _step.value;
+                    var response = validator(value);
+                    var valid = response[0];
+                    var message = response[1];
 
-                    if (!valid(value)) {
+                    if (!valid) {
+                      console.error(message);
                       return; // If any of the validators fail, bail out and don't set the property value
                     }
                   } // If all validators pass, call the existing getter
@@ -4007,6 +4011,19 @@ var PropValidator = function PropValidator(superclass) {
               {
                 return this.generateInclusionValidator(prop, data);
               }
+
+            case 'exclusion':
+              {
+                return this.generateExclusionValidator(prop, data);
+              }
+
+            default:
+              {
+                return function () {
+                  console.warn("No validator named '".concat(type, "' exists. '").concat(prop, "' wasn't validated."));
+                  return true;
+                }; // A dummy method if no validation rule exists
+              }
           }
         }
       }, {
@@ -4014,12 +4031,17 @@ var PropValidator = function PropValidator(superclass) {
         value: function generateInclusionValidator(prop, data) {
           return function (value) {
             var valid = data.includes(value);
-
-            if (!valid) {
-              console.error("'".concat(value, "' is an invalid value for '").concat(prop, "'. Must be one of: ").concat(data.join(', ')));
-            }
-
-            return valid;
+            var message = "'".concat(value, "' is an invalid value for '").concat(prop, "'. Must be one of: ").concat(data.join(', '));
+            return [valid, message];
+          };
+        }
+      }, {
+        key: "generateExclusionValidator",
+        value: function generateExclusionValidator(prop, data) {
+          return function (value) {
+            var valid = !data.includes(value);
+            var message = "'".concat(value, "' is an invalid value for '").concat(prop, "'. '").concat(prop, "' cannot be: ").concat(data.join(', '));
+            return [valid, message];
           };
         }
       }]);
@@ -4030,7 +4052,7 @@ var PropValidator = function PropValidator(superclass) {
 };
 
 function _templateObject() {
-  var data = _taggedTemplateLiteral(["\n      <h1 class=\"prop-validator-test-component\">\n        Hi, I'm the prop-validator-test-component component. ", "\n      </h1>\n    "]);
+  var data = _taggedTemplateLiteral(["\n      <p class=\"prop-validator-test-component\">\n        Size: ", "<br />\n        Name: ", "<br />\n        Variation: ", "\n      </p>\n    "]);
 
   _templateObject = function _templateObject() {
     return data;
@@ -4050,14 +4072,9 @@ function (_PropValidator) {
   }
 
   _createClass(PropValidatorTestComponent, [{
-    key: "somethingRandom",
-    value: function somethingRandom() {
-      console.log('HERE');
-    }
-  }, {
     key: "render",
     value: function render() {
-      return html(_templateObject(), this.size);
+      return html(_templateObject(), this.size, this.name, this.variation);
     }
   }, {
     key: "size",
@@ -4065,7 +4082,7 @@ function (_PropValidator) {
       return this._size;
     },
     set: function set(value) {
-      console.log('size be settin');
+      console.log('Custom setter still runs');
       var oldValue = this._size;
       this._size = value;
       this.requestUpdate('size', oldValue);
@@ -4084,6 +4101,12 @@ function (_PropValidator) {
           type: String,
           validate: [{
             inclusion: ['unicorn', 'pirate', 'ninja']
+          }]
+        },
+        variation: {
+          type: String,
+          validate: [{
+            exclusion: ['thorns', 'thistles']
           }]
         }
       };

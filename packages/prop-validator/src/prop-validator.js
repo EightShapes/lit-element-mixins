@@ -46,8 +46,12 @@ export const PropValidator = superclass =>
           },
           set: value => {
             // Run all validators
-            for (const valid of validators) {
-              if (!valid(value)) {
+            for (const validator of validators) {
+              const response = validator(value);
+              const valid = response[0];
+              const message = response[1];
+              if (!valid) {
+                console.error(message);
                 return; // If any of the validators fail, bail out and don't set the property value
               }
             }
@@ -67,20 +71,37 @@ export const PropValidator = superclass =>
         case 'inclusion': {
           return this.generateInclusionValidator(prop, data);
         }
+        case 'exclusion': {
+          return this.generateExclusionValidator(prop, data);
+        }
+        default: {
+          return () => {
+            console.warn(
+              `No validator named '${type}' exists. '${prop}' wasn't validated.`,
+            );
+            return true;
+          }; // A dummy method if no validation rule exists
+        }
       }
     }
 
     generateInclusionValidator(prop, data) {
       return value => {
         const valid = data.includes(value);
-        if (!valid) {
-          console.error(
-            `'${value}' is an invalid value for '${prop}'. Must be one of: ${data.join(
-              ', ',
-            )}`,
-          );
-        }
-        return valid;
+        const message = `'${value}' is an invalid value for '${prop}'. Must be one of: ${data.join(
+          ', ',
+        )}`;
+        return [valid, message];
+      };
+    }
+
+    generateExclusionValidator(prop, data) {
+      return value => {
+        const valid = !data.includes(value);
+        const message = `'${value}' is an invalid value for '${prop}'. '${prop}' cannot be: ${data.join(
+          ', ',
+        )}`;
+        return [valid, message];
       };
     }
   };
