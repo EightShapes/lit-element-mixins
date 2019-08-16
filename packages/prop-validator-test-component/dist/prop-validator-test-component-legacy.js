@@ -72,6 +72,55 @@ function _createClass(Constructor, protoProps, staticProps) {
   return Constructor;
 }
 
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(source, true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(source).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
+}
+
 function _inherits(subClass, superClass) {
   if (typeof superClass !== "function" && superClass !== null) {
     throw new TypeError("Super expression must either be null or a function");
@@ -3922,7 +3971,7 @@ LitElement.render = render$1;
 // message - what appears in console
 // on - when should validation run?
 // if - conditional validation - possibly an array
-var PropValidator = function PropValidator(superclass) {
+var PropValidator = function PropValidator(superclass, config) {
   return (
     /*#__PURE__*/
     function (_superclass) {
@@ -3934,15 +3983,22 @@ var PropValidator = function PropValidator(superclass) {
         _classCallCheck(this, _class);
 
         _this = _possibleConstructorReturn(this, _getPrototypeOf(_class).call(this));
+        var defaultConfig = {
+          inlineErrors: false,
+          consoleErrors: true
+        };
         var props = _this.constructor.properties;
+        config = _objectSpread2({}, defaultConfig, {}, config);
 
         for (var propName in props) {
           var propData = props[propName];
 
           if (propData.validate) {
-            console.log("Found a validator for ".concat(propName));
+            var validators = _this.generateValidators(propName, propData);
 
-            _this.generateValidators(propName, propData);
+            if (validators.length > 0) {
+              _this.injectValidatorsForProp(propName, validators);
+            }
           }
         }
 
@@ -3950,58 +4006,78 @@ var PropValidator = function PropValidator(superclass) {
       }
 
       _createClass(_class, [{
-        key: "generateValidators",
-        value: function generateValidators(propName, propData) {
+        key: "callDefaultGetter",
+        value: function callDefaultGetter(propName) {
+          return Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), propName).get.call(this); // Call the existing getter
+        }
+      }, {
+        key: "callDefaultSetter",
+        value: function callDefaultSetter(propName, value) {
+          Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), propName).set.call(this, value);
+        }
+      }, {
+        key: "injectValidatorsForProp",
+        value: function injectValidatorsForProp(propName, validators) {
           var _this2 = this;
 
-          var validators = propData.validate.map(function (validatorData) {
-            var validatorType = Object.keys(validatorData)[0];
-            return _this2.generateValidator(validatorType, validatorData[validatorType], propName);
-          });
+          Object.defineProperty(this, propName, {
+            get: function get() {
+              return _this2.callDefaultGetter(propName);
+            },
+            set: function set(value) {
+              // Run all validators
+              var _iteratorNormalCompletion = true;
+              var _didIteratorError = false;
+              var _iteratorError = undefined;
 
-          if (validators.length > 0) {
-            Object.defineProperty(this, propName, {
-              get: function get() {
-                return Object.getOwnPropertyDescriptor(Object.getPrototypeOf(_this2), propName).get.call(_this2); // Call the existing getter
-              },
-              set: function set(value) {
-                // Run all validators
-                var _iteratorNormalCompletion = true;
-                var _didIteratorError = false;
-                var _iteratorError = undefined;
+              try {
+                for (var _iterator = validators[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                  var validator = _step.value;
+                  var response = validator(value);
+                  var valid = response[0];
+                  var message = response[1];
 
-                try {
-                  for (var _iterator = validators[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var validator = _step.value;
-                    var response = validator(value);
-                    var valid = response[0];
-                    var message = response[1];
-
-                    if (!valid) {
+                  if (!valid) {
+                    if (config.consoleErrors) {
                       console.error(message);
+                    }
+
+                    if (config.inlineErrors) {
+                      value = message;
+                    } else {
                       return; // If any of the validators fail, bail out and don't set the property value
                     }
-                  } // If all validators pass, call the existing getter
+                  }
+                } // If all validators pass, call the existing getter
 
-                } catch (err) {
-                  _didIteratorError = true;
-                  _iteratorError = err;
+              } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+              } finally {
+                try {
+                  if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+                    _iterator["return"]();
+                  }
                 } finally {
-                  try {
-                    if (!_iteratorNormalCompletion && _iterator["return"] != null) {
-                      _iterator["return"]();
-                    }
-                  } finally {
-                    if (_didIteratorError) {
-                      throw _iteratorError;
-                    }
+                  if (_didIteratorError) {
+                    throw _iteratorError;
                   }
                 }
-
-                Object.getOwnPropertyDescriptor(Object.getPrototypeOf(_this2), propName).set.call(_this2, value);
               }
-            });
-          }
+
+              _this2.callDefaultSetter(propName, value);
+            }
+          });
+        }
+      }, {
+        key: "generateValidators",
+        value: function generateValidators(propName, propData) {
+          var _this3 = this;
+
+          var validators = propData.validate.map(function (validatorData) {
+            return _this3.generateValidator(validatorData.type, validatorData, propName);
+          });
+          return validators;
         }
       }, {
         key: "generateValidator",
@@ -4022,7 +4098,7 @@ var PropValidator = function PropValidator(superclass) {
                 return function () {
                   console.warn("No validator named '".concat(type, "' exists. '").concat(prop, "' wasn't validated."));
                   return true;
-                }; // A dummy method if no validation rule exists
+                };
               }
           }
         }
@@ -4030,8 +4106,8 @@ var PropValidator = function PropValidator(superclass) {
         key: "generateInclusionValidator",
         value: function generateInclusionValidator(prop, data) {
           return function (value) {
-            var valid = data.includes(value);
-            var message = "'".concat(value, "' is an invalid value for '").concat(prop, "'. Must be one of: ").concat(data.join(', '));
+            var valid = data.values.indexOf(value) !== -1;
+            var message = "'".concat(value, "' is an invalid value for '").concat(prop, "'. Must be one of: ").concat(data.values.join(', '));
             return [valid, message];
           };
         }
@@ -4039,8 +4115,8 @@ var PropValidator = function PropValidator(superclass) {
         key: "generateExclusionValidator",
         value: function generateExclusionValidator(prop, data) {
           return function (value) {
-            var valid = !data.includes(value);
-            var message = "'".concat(value, "' is an invalid value for '").concat(prop, "'. '").concat(prop, "' cannot be: ").concat(data.join(', '));
+            var valid = data.values.indexOf(value) === -1;
+            var message = "'".concat(value, "' is an invalid value for '").concat(prop, "'. '").concat(prop, "' cannot be: ").concat(data.values.join(', '));
             return [valid, message];
           };
         }
@@ -4094,19 +4170,22 @@ function (_PropValidator) {
         size: {
           type: String,
           validate: [{
-            inclusion: ['small', 'medium', 'large']
+            type: 'inclusion',
+            values: ['small', 'medium', 'large']
           }]
         },
         name: {
           type: String,
           validate: [{
-            inclusion: ['unicorn', 'pirate', 'ninja']
+            type: 'inclusion',
+            values: ['unicorn', 'pirate', 'ninja']
           }]
         },
         variation: {
           type: String,
           validate: [{
-            exclusion: ['thorns', 'thistles']
+            type: 'exclusion',
+            values: ['thorns', 'thistles']
           }]
         }
       };
@@ -4114,7 +4193,9 @@ function (_PropValidator) {
   }]);
 
   return PropValidatorTestComponent;
-}(PropValidator(LitElement));
+}(PropValidator(LitElement, {
+  inlineErrors: true
+}));
 
 if (window.customElements.get('prop-validator-test-component') === undefined) {
   window.customElements.define('prop-validator-test-component', PropValidatorTestComponent);

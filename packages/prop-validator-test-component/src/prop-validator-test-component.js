@@ -1,20 +1,24 @@
 import { LitElement, html } from 'lit-element';
 import { PropValidator } from '@eightshapes/prop-validator';
 
-export class PropValidatorTestComponent extends PropValidator(LitElement) {
+export class PropValidatorTestComponent extends PropValidator(LitElement, {
+  inlineErrors: true,
+}) {
   static get properties() {
     return {
       size: {
         type: String,
-        validate: [{ inclusion: ['small', 'medium', 'large'] }],
+        validate: [{ type: 'inclusion', values: ['small', 'medium', 'large'] }],
       },
       name: {
         type: String,
-        validate: [{ inclusion: ['unicorn', 'pirate', 'ninja'] }],
+        validate: [
+          { type: 'inclusion', values: ['unicorn', 'pirate', 'ninja'] },
+        ],
       },
       variation: {
         type: String,
-        validate: [{ exclusion: ['thorns', 'thistles'] }],
+        validate: [{ type: 'exclusion', values: ['thorns', 'thistles'] }],
       },
     };
   }
