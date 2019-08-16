@@ -3960,8 +3960,6 @@ LitElement['finalized'] = true;
 
 LitElement.render = render$1;
 
-// inclusion
-// exclusion
 // format (regex)
 // length
 // presence (required)
@@ -3985,7 +3983,8 @@ var PropValidator = function PropValidator(superclass, config) {
         _this = _possibleConstructorReturn(this, _getPrototypeOf(_class).call(this));
         var defaultConfig = {
           inlineErrors: false,
-          consoleErrors: true
+          consoleErrors: true,
+          blockRenderWhenInvalid: false
         };
         var props = _this.constructor.properties;
         config = _objectSpread2({}, defaultConfig, {}, config);
@@ -4025,7 +4024,8 @@ var PropValidator = function PropValidator(superclass, config) {
               return _this2.callDefaultGetter(propName);
             },
             set: function set(value) {
-              // Run all validators
+              var setValue = value; // Run all validators
+
               var _iteratorNormalCompletion = true;
               var _didIteratorError = false;
               var _iteratorError = undefined;
@@ -4043,9 +4043,12 @@ var PropValidator = function PropValidator(superclass, config) {
                     }
 
                     if (config.inlineErrors) {
-                      value = message;
-                    } else {
-                      return; // If any of the validators fail, bail out and don't set the property value
+                      setValue = message;
+                    }
+
+                    if (config.blockRenderWhenInvalid && !config.inlineErrors) {
+                      // If render should be blocked on failure and inline errors should not be shown, bail out
+                      return;
                     }
                   }
                 } // If all validators pass, call the existing getter
@@ -4065,7 +4068,7 @@ var PropValidator = function PropValidator(superclass, config) {
                 }
               }
 
-              _this2.callDefaultSetter(propName, value);
+              _this2.callDefaultSetter(propName, setValue);
             }
           });
         }
@@ -4103,11 +4106,37 @@ var PropValidator = function PropValidator(superclass, config) {
           }
         }
       }, {
+        key: "getErrorMessage",
+        value: function getErrorMessage(value, prop, data, defaultMessage) {
+          if (data.message !== undefined) {
+            if (typeof data.message === 'function') {
+              return data.message(value, prop, data);
+            } else {
+              return data.message;
+            }
+          } else {
+            return defaultMessage;
+          }
+        }
+      }, {
         key: "generateInclusionValidator",
         value: function generateInclusionValidator(prop, data) {
+          var _this4 = this;
+
           return function (value) {
-            var valid = data.values.indexOf(value) !== -1;
-            var message = "'".concat(value, "' is an invalid value for '").concat(prop, "'. Must be one of: ").concat(data.values.join(', '));
+            var defaultMessage = "'".concat(value, "' is an invalid value for '").concat(prop, "'. Must be one of: ").concat(data.values.join(', '));
+
+            var message = _this4.getErrorMessage(value, prop, data, defaultMessage);
+
+            var valid = true;
+            var conditional = data["if"] === undefined ? function () {
+              return true;
+            } : data["if"].bind(_this4);
+
+            if (conditional()) {
+              valid = data.values.indexOf(value) !== -1; // Run the validator
+            }
+
             return [valid, message];
           };
         }
@@ -4158,7 +4187,7 @@ function (_PropValidator) {
       return this._size;
     },
     set: function set(value) {
-      console.log('Custom setter still runs');
+      // console.log('Custom setter still runs');
       var oldValue = this._size;
       this._size = value;
       this.requestUpdate('size', oldValue);
@@ -4168,17 +4197,24 @@ function (_PropValidator) {
     get: function get() {
       return {
         size: {
-          type: String,
-          validate: [{
-            type: 'inclusion',
-            values: ['small', 'medium', 'large']
-          }]
+          type: String // validate: [{ type: 'inclusion', values: ['small', 'medium', 'large'] }],
+
         },
         name: {
           type: String,
           validate: [{
             type: 'inclusion',
-            values: ['unicorn', 'pirate', 'ninja']
+            values: ['unicorn', 'pirate', 'ninja', 'bunny', 'rabbit', 'hare']
+          }, {
+            "if": function _if() {
+              // Have to use a regular function here, otherwise this.size won't work
+              return this.size === 'small';
+            },
+            type: 'inclusion',
+            values: ['bunny', 'rabbit', 'hare'],
+            message: function message(value, prop, data) {
+              return "'".concat(value, "' is an invalid value when size == 'small'. Must be one of: ").concat(data.values.join(', '), ".  This is an ").concat(data.type, " rule.");
+            }
           }]
         },
         variation: {
@@ -4194,7 +4230,8 @@ function (_PropValidator) {
 
   return PropValidatorTestComponent;
 }(PropValidator(LitElement, {
-  inlineErrors: true
+  inlineErrors: true,
+  blockRenderWhenInvalid: true
 }));
 
 if (window.customElements.get('prop-validator-test-component') === undefined) {

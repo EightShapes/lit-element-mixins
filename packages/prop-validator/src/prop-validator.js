@@ -1,5 +1,3 @@
-// inclusion
-// exclusion
 // format (regex)
 // length
 // presence (required)
@@ -15,7 +13,11 @@ export const PropValidator = (superclass, config) =>
   class extends superclass {
     constructor() {
       super();
-      const defaultConfig = { inlineErrors: false, consoleErrors: true };
+      const defaultConfig = {
+        inlineErrors: false,
+        consoleErrors: true,
+        blockRenderWhenInvalid: false,
+      };
       const props = this.constructor.properties;
       config = { ...defaultConfig, ...config };
 
@@ -50,6 +52,7 @@ export const PropValidator = (superclass, config) =>
           return this.callDefaultGetter(propName);
         },
         set: value => {
+          let setValue = value;
           // Run all validators
           for (const validator of validators) {
             const response = validator(value);
@@ -60,15 +63,17 @@ export const PropValidator = (superclass, config) =>
                 console.error(message);
               }
               if (config.inlineErrors) {
-                value = message;
-              } else {
-                return; // If any of the validators fail, bail out and don't set the property value
+                setValue = message;
+              }
+              if (config.blockRenderWhenInvalid && !config.inlineErrors) {
+                // If render should be blocked on failure and inline errors should not be shown, bail out
+                return;
               }
             }
           }
 
           // If all validators pass, call the existing getter
-          this.callDefaultSetter(propName, value);
+          this.callDefaultSetter(propName, setValue);
         },
       });
     }
@@ -103,12 +108,31 @@ export const PropValidator = (superclass, config) =>
       }
     }
 
+    getErrorMessage(value, prop, data, defaultMessage) {
+      if (data.message !== undefined) {
+        if (typeof data.message === 'function') {
+          return data.message(value, prop, data);
+        } else {
+          return data.message;
+        }
+      } else {
+        return defaultMessage;
+      }
+    }
+
     generateInclusionValidator(prop, data) {
       return value => {
-        const valid = data.values.indexOf(value) !== -1;
-        const message = `'${value}' is an invalid value for '${prop}'. Must be one of: ${data.values.join(
+        const defaultMessage = `'${value}' is an invalid value for '${prop}'. Must be one of: ${data.values.join(
           ', ',
         )}`;
+        const message = this.getErrorMessage(value, prop, data, defaultMessage);
+        let valid = true;
+        let conditional =
+          data.if === undefined ? () => true : data.if.bind(this);
+
+        if (conditional()) {
+          valid = data.values.indexOf(value) !== -1; // Run the validator
+        }
         return [valid, message];
       };
     }

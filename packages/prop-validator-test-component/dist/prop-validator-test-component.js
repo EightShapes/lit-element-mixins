@@ -2347,8 +2347,6 @@ LitElement['finalized'] = true;
 LitElement.render = render$1;
 //# sourceMappingURL=lit-element.js.map
 
-// inclusion
-// exclusion
 // format (regex)
 // length
 // presence (required)
@@ -2364,7 +2362,11 @@ const PropValidator = (superclass, config) =>
   class extends superclass {
     constructor() {
       super();
-      const defaultConfig = { inlineErrors: false, consoleErrors: true };
+      const defaultConfig = {
+        inlineErrors: false,
+        consoleErrors: true,
+        blockRenderWhenInvalid: false,
+      };
       const props = this.constructor.properties;
       config = { ...defaultConfig, ...config };
 
@@ -2399,6 +2401,7 @@ const PropValidator = (superclass, config) =>
           return this.callDefaultGetter(propName);
         },
         set: value => {
+          let setValue = value;
           // Run all validators
           for (const validator of validators) {
             const response = validator(value);
@@ -2409,15 +2412,17 @@ const PropValidator = (superclass, config) =>
                 console.error(message);
               }
               if (config.inlineErrors) {
-                value = message;
-              } else {
-                return; // If any of the validators fail, bail out and don't set the property value
+                setValue = message;
+              }
+              if (config.blockRenderWhenInvalid && !config.inlineErrors) {
+                // If render should be blocked on failure and inline errors should not be shown, bail out
+                return;
               }
             }
           }
 
           // If all validators pass, call the existing getter
-          this.callDefaultSetter(propName, value);
+          this.callDefaultSetter(propName, setValue);
         },
       });
     }
@@ -2452,12 +2457,31 @@ const PropValidator = (superclass, config) =>
       }
     }
 
+    getErrorMessage(value, prop, data, defaultMessage) {
+      if (data.message !== undefined) {
+        if (typeof data.message === 'function') {
+          return data.message(value, prop, data);
+        } else {
+          return data.message;
+        }
+      } else {
+        return defaultMessage;
+      }
+    }
+
     generateInclusionValidator(prop, data) {
       return value => {
-        const valid = data.values.indexOf(value) !== -1;
-        const message = `'${value}' is an invalid value for '${prop}'. Must be one of: ${data.values.join(
+        const defaultMessage = `'${value}' is an invalid value for '${prop}'. Must be one of: ${data.values.join(
           ', ',
         )}`;
+        const message = this.getErrorMessage(value, prop, data, defaultMessage);
+        let valid = true;
+        let conditional =
+          data.if === undefined ? () => true : data.if.bind(this);
+
+        if (conditional()) {
+          valid = data.values.indexOf(value) !== -1; // Run the validator
+        }
         return [valid, message];
       };
     }
@@ -2475,17 +2499,34 @@ const PropValidator = (superclass, config) =>
 
 class PropValidatorTestComponent extends PropValidator(LitElement, {
   inlineErrors: true,
+  blockRenderWhenInvalid: true,
 }) {
   static get properties() {
     return {
       size: {
         type: String,
-        validate: [{ type: 'inclusion', values: ['small', 'medium', 'large'] }],
+        // validate: [{ type: 'inclusion', values: ['small', 'medium', 'large'] }],
       },
       name: {
         type: String,
         validate: [
-          { type: 'inclusion', values: ['unicorn', 'pirate', 'ninja'] },
+          {
+            type: 'inclusion',
+            values: ['unicorn', 'pirate', 'ninja', 'bunny', 'rabbit', 'hare'],
+          },
+          {
+            if: function() {
+              // Have to use a regular function here, otherwise this.size won't work
+              return this.size === 'small';
+            },
+            type: 'inclusion',
+            values: ['bunny', 'rabbit', 'hare'],
+            message: function(value, prop, data) {
+              return `'${value}' is an invalid value when size == 'small'. Must be one of: ${data.values.join(
+                ', ',
+              )}.  This is an ${data.type} rule.`;
+            },
+          },
         ],
       },
       variation: {
@@ -2500,7 +2541,7 @@ class PropValidatorTestComponent extends PropValidator(LitElement, {
   }
 
   set size(value) {
-    console.log('Custom setter still runs');
+    // console.log('Custom setter still runs');
     const oldValue = this._size;
     this._size = value;
     this.requestUpdate('size', oldValue);
