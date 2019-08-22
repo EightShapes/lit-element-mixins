@@ -1,6 +1,6 @@
 {
   "name": "prop-validator-test-component",
-  "version": "0.1.1",
+  "private": true,
   "description": "",
   "main": "src/prop-validator-test-component.js",
   "scripts": {
@@ -34,5 +34,6 @@
     "@eightshapes/prop-validator": "^0.1.1",
     "lit-element": "^2.2.1",
     "regenerator-runtime": "^0.13.3"
-  }
+  },
+  "gitHead": "6bcd41b73cdf0e328bc3a5139dee26039789a1fd"
 }
