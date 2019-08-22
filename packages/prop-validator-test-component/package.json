@@ -1,6 +1,6 @@
 {
   "name": "prop-validator-test-component",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "src/prop-validator-test-component.js",
   "scripts": {
@@ -31,7 +31,7 @@
     "sass": "^1.22.9"
   },
   "dependencies": {
-    "@eightshapes/prop-validator": "^0.1.0",
+    "@eightshapes/prop-validator": "^0.1.1",
     "lit-element": "^2.2.1",
     "regenerator-runtime": "^0.13.3"
   }
