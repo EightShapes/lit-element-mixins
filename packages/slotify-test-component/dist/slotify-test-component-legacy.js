@@ -4156,7 +4156,7 @@ var Slotify = function Slotify(superclass) {
 };
 
 function _templateObject() {
-  var data = _taggedTemplateLiteral(["\n      <div class=\"burger-wrap\">\n        <s-slot name=\"bun-top\"></s-slot>\n        <s-slot name=\"cheese\">DEFAULT CHEESE</s-slot>\n        <s-slot @slotchange=", "></s-slot>\n        <s-slot name=\"bun-bottom\"></s-slot>\n        <div class=\"burger-plate\">Burger Plate</div>\n      </div>\n    "]);
+  var data = _taggedTemplateLiteral(["\n      <div class=\"burger-wrap\">\n        <s-slot name=\"bun-top\"></s-slot>\n        <s-slot @slotchange=", " name=\"cheese\"\n          >DEFAULT CHEESE</s-slot\n        >\n        <s-slot @slotchange=", ">JUST BEEF</s-slot>\n        <s-slot name=\"bun-bottom\"></s-slot>\n        <div class=\"burger-plate\">Burger Plate</div>\n      </div>\n    "]);
 
   _templateObject = function _templateObject() {
     return data;
@@ -4176,6 +4176,11 @@ function (_Slotify) {
   }
 
   _createClass(SlotifyTestComponent, [{
+    key: "handleCheeseSlotChange",
+    value: function handleCheeseSlotChange(e) {
+      console.log('Cheese slot changed', e.target);
+    }
+  }, {
     key: "handleSlotChange",
     value: function handleSlotChange(e) {
       console.log('Slot content changed', e.target);
@@ -4183,7 +4188,7 @@ function (_Slotify) {
   }, {
     key: "render",
     value: function render() {
-      return html(_templateObject(), this.handleSlotChange);
+      return html(_templateObject(), this.handleCheeseSlotChange, this.handleSlotChange);
     }
   }]);
 

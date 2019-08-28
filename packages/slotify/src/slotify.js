@@ -52,7 +52,6 @@ export const Slotify = superclass =>
             // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
             const assignedContentObserver = new MutationObserver(() => {
               this.updateEmptySlot(); // This is an observer on the actual <s-slot>
-
               this.dispatchEvent(
                 new CustomEvent('slotchange', {
                   bubbles: true,

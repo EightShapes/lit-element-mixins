@@ -11,13 +11,18 @@
     "watch-build": "npm run watch-build-ie | npm run watch-build-esm | npm run watch-build-styles",
     "watch-build-ie": "rollup --watch -c rollup.config.ie.js",
     "watch-build-esm": "rollup --watch -c rollup.config.js",
-    "watch-build-styles": "sass src:dist --watch"
+    "watch-build-styles": "sass src:dist --watch",
+    "test": "karma start --coverage",
+    "test:watch": "karma start --auto-watch=true --single-run=false",
+    "test:update-snapshots": "karma start --update-snapshots",
+    "test:prune-snapshots": "karma start --prune-snapshots",
+    "test:compatibility": "karma start --compatibility all --auto-watch=true --single-run=false"
   },
   "dependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@eightshapes/slotify": "^0.1.0",
-    "@webcomponents/webcomponentsjs": "^2.2.10",
+    "@webcomponents/custom-elements": "^1.2.4",
     "browser-sync": "^2.26.7",
     "lit-element": "^2.2.1",
     "regenerator-runtime": "^0.13.3",
@@ -27,10 +32,15 @@
     "sass": "^1.22.9"
   },
   "devDependencies": {
+    "@open-wc/testing": "^2.3.3",
+    "@open-wc/testing-karma": "^3.1.29",
+    "deepmerge": "^4.0.0",
     "eslint": "^6.1.0",
     "eslint-config-prettier": "^6.0.0",
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-sort-class-members": "^1.5.0",
-    "prettier": "^1.18.2"
+    "karma": "^4.3.0",
+    "prettier": "^1.18.2",
+    "sinon": "^7.4.1"
   }
 }
