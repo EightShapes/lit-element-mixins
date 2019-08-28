@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import sinon from 'sinon';
-import { fixture, expect } from '@open-wc/testing';
+import { fixture, expect, oneEvent } from '@open-wc/testing';
 
 import '../../src/slotify-test-component-entry.js';
 
@@ -151,22 +151,21 @@ describe('slotify test component', () => {
     expect(cheeseSlot.textContent).to.contain('DEFAULT CHEESE');
   });
 
-  it('should fire a slotchange event on the default slot when content is added', async () => {
+  xit('should fire a slotchange event on the default slot when content is added', async () => {
     const el = await fixture(
       '<slotify-test-component></slotify-test-component>',
     );
+
     const defaultSlot = Array.from(el.querySelectorAll('s-slot')).find(
       s => s.getAttribute('name') === null,
     );
-    console.log(defaultSlot);
 
-    const slotChangeHandler = sinon.spy();
-    defaultSlot.addEventListener('slotchange', slotChangeHandler);
+    const { detail } = await oneEvent(defaultSlot, 'slotchange');
 
     const newContent = document.createElement('div');
     newContent.textContent = 'Added after component initialization';
-    await el.appendChild(newContent);
+    el.appendChild(newContent);
 
-    expect(slotChangeHandler).to.have.callCount(1);
+    expect(detail).to.be.true;
   });
 });
