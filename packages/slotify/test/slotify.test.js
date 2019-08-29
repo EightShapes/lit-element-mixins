@@ -1,9 +1,23 @@
-import { fixture, html } from '@open-wc/testing';
+import { expect, fixture, defineCE } from '@open-wc/testing';
+import { LitElement, html } from 'lit-element';
+import { Slotify } from '../src/slotify.js';
 
-describe('my-test', () => {
-  it('works', async () => {
-    const el = await fixture(html`
-      <h1>Hello World</h1>
-    `);
-  });
+const tag = defineCE(
+  class extends Slotify(LitElement) {
+    constructor() {
+      super();
+      this.foo = true;
+    }
+
+    render() {
+      return html`
+        <h1>Hello World</h1>
+      `;
+    }
+  },
+);
+
+it('can instantiate a slotified element', async () => {
+  const el = await fixture(`<${tag}></${tag}>`);
+  expect(el.textContent).to.contain('Hello World');
 });
