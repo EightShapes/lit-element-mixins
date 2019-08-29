@@ -3,11 +3,11 @@
   "version": "0.2.1",
   "description": "A class mixin for LitElement that adds <slot> functionality to templates without using the ShadowDOM",
   "main": "./src/slotify.js",
-  "author": "Kevin Powell <kevinmpowell@gmail.com>",
+  "author": "Kevin Powell <kevin@eightshapes.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EightShapes/slotify.git"
+    "url": "https://github.com/EightShapes/lit-element-mixins.git"
   },
   "devDependencies": {
     "eslint": "^6.1.0",

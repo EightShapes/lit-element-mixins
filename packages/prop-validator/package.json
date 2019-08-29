@@ -9,6 +9,10 @@
   "keywords": [],
   "author": "Kevin Powell <kevin@eightshapes.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EightShapes/lit-element-mixins.git"
+  },
   "devDependencies": {
     "eslint": "^6.1.0",
     "eslint-config-prettier": "^6.0.0",
