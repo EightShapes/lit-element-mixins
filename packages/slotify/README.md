@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/EightShapes/lit-element-mixins.svg?branch=master)](https://travis-ci.org/EightShapes/lit-element-mixins)
+
 # Slotify
 Slotify is a LitElement class mixin that enables `<slot>` functionality in templates without requiring the use of ShadowDOM.
 
