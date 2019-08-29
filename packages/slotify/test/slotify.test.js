@@ -103,6 +103,20 @@ describe('slotify test component', () => {
       expect(defaultSlot.textContent).to.contain(FALLBACK_CONTENT);
       expect(fallbackWrapper.hidden).to.be.false;
     });
+
+    it('should persist default slot content even when the component is disconnected and reconnected', async () => {
+      const el = await fixture(
+        `<${tag}>This is my persistent content</${tag}>`,
+      );
+      el.parentNode.removeChild(el); // remove element from DOM
+      document.body.appendChild(el); // Add it back to the DOM
+      await elementUpdated(el);
+      const defaultSlot = getDefaultSlot(el);
+      const assignedWrapper = defaultSlot.querySelector('s-assigned-wrapper');
+      expect(assignedWrapper.textContent).to.contain(
+        'This is my persistent content',
+      );
+    });
   });
 
   describe('named slot behavior', () => {

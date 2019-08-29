@@ -67,6 +67,18 @@ export const Slotify = superclass =>
 
           disconnectedCallback() {
             this.lightDomObserver.disconnect(); // don't let observers pile up
+            const element = this.sRoot && this.sRoot.parentElement;
+            const fragment = document.createDocumentFragment();
+
+            Array.from(this.assignedWrapper.childNodes).forEach(child => {
+              fragment.appendChild(child);
+            });
+
+            if (element) {
+              element.appendChild(fragment);
+            }
+
+            this.sRoot = null;
           }
 
           createFallbackWrapper() {
