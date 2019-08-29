@@ -4,7 +4,7 @@ Useful functionality for use with [Lit Element](https://lit-element.polymer-proj
 ## Slotify
 Enables `<slot>` functionality in Lit Element templates without requiring the use of ShadowDOM.
 
-It's based on the [Vampire Slot Library](https://github.com/Boulevard/vampire) by @daniel-nagy.
+Based on the [Vampire Slot Library](https://github.com/Boulevard/vampire) by @daniel-nagy.
 
 [Learn More](https://github.com/EightShapes/lit-element-mixins/tree/master/packages/slotify)
 
