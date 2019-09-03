@@ -86,15 +86,21 @@ export const Slotify = superclass =>
               const SFallbackWrapper = class extends HTMLElement {};
               customElements.define('s-fallback-wrapper', SFallbackWrapper);
             }
+
+            const fallbackNodes = Array.from(this.childNodes).filter(
+              n =>
+                n.tagName === undefined ||
+                n.tagName.toLowerCase() !== 's-assigned-wrapper',
+            );
             // This is only called once, get the contents of this <s-slot> and wrap them in a span
-            if (this.childNodes.length === 0) {
+            if (fallbackNodes.length === 0) {
               // there's no default content, don't create the wrapper
               return false;
             } else {
               const fallbackWrapper = document.createElement(
                 's-fallback-wrapper',
               );
-              Array.from(this.childNodes).forEach(node => {
+              fallbackNodes.forEach(node => {
                 fallbackWrapper.appendChild(node);
               });
               this.appendChild(fallbackWrapper); // Add the fallback span to the component;

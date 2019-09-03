@@ -23,3 +23,11 @@ export class SlotifyTestComponent extends Slotify(LitElement) {
     `;
   }
 }
+
+export class SimpleWrapper extends Slotify(LitElement) {
+  render() {
+    return html`
+      <div class="simple-wrapper"><s-slot></s-slot></div>
+    `;
+  }
+}
