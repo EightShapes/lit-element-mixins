@@ -194,4 +194,43 @@ describe('slotify test component', () => {
       expect(namedSlot.textContent).to.contain('This is first in source');
     });
   });
+
+  describe('update complete event', () => {
+    it('should resolve the updateComplete promise only after all slots are rendered', async () => {
+      const el = await fixture(
+        `<${tag}>
+          <div slot="my-named-slot" class="lots-of-divs">
+            <${tag}>
+              <div class="default-content">Default Slot Content</div>
+              <div slot="my-named-slot">
+                <${tag}>
+                  <div class="default-content">Default Slot Content</div>
+                  <div slot="my-named-slot">
+                    <${tag}>
+                      <div class="default-content">Default Slot Content</div>
+                      <div slot="my-named-slot">
+                        <${tag}>
+                          <div class="default-content">Default Slot Content</div>
+                          <div slot="my-named-slot">
+
+                          </div>
+                        </${tag}>
+                      </div>
+                    </${tag}>
+                  </div>
+                </${tag}>
+              </div>
+            </${tag}>
+          </div>
+          <div slot="my-named-slot" class="lots-of-divs">This is some named slot content</div>
+        </${tag}>`,
+      );
+
+      await el.updateComplete;
+      const deeplyNestedSlotable = el.querySelector(
+        `${tag} ${tag} ${tag} ${tag} s-assigned-wrapper .default-content`,
+      );
+      expect(deeplyNestedSlotable).to.not.be.null;
+    });
+  });
 });
