@@ -2,6 +2,7 @@ export const Slotify = superclass =>
   class extends superclass {
     constructor() {
       super();
+
       if (!customElements.get('s-root')) {
         const SRoot = class extends HTMLElement {};
         customElements.define('s-root', SRoot);
@@ -11,6 +12,28 @@ export const Slotify = superclass =>
           constructor() {
             super();
             this.name = this.getAttribute('name');
+
+            this._slotRendered = false;
+            this._slotRenderAttempts = 0;
+            this._maxSlotRenderAttempts = 10;
+            this._slotUpdateCompleted = new Promise((resolve, reject) => {
+              const id = setInterval(() => {
+                this._slotRenderAttempts++;
+                try {
+                  if (this._slotRendered) {
+                    clearInterval(id);
+                    resolve();
+                  } else if (
+                    this._slotRenderAttempts >= this._maxSlotRenderAttempts
+                  ) {
+                    throw new Error('Slot Rendering Timeout');
+                  }
+                } catch (e) {
+                  clearInterval(id);
+                  reject(e);
+                }
+              }, 50);
+            });
           }
 
           connectedCallback() {
@@ -36,9 +59,10 @@ export const Slotify = superclass =>
             this.sRoot = this.closest('s-root');
 
             // Observe the "Light DOM" of the component, to detect when new nodes are added and assign them to the <s-slot> if necessary
-            this.lightDomObserver = new MutationObserver(() =>
-              this.updateAssignedContent(),
-            );
+            this.lightDomObserver = new MutationObserver(() => {
+              this._slotRendered = false;
+              this.updateAssignedContent();
+            });
             this.lightDomObserver.observe(this.sRoot.parentElement, {
               childList: true,
             });
@@ -51,6 +75,7 @@ export const Slotify = superclass =>
 
             // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
             const assignedContentObserver = new MutationObserver(() => {
+              this._slotRendered = false;
               this.updateEmptySlot(); // This is an observer on the actual <s-slot>
               this.dispatchEvent(
                 new CustomEvent('slotchange', {
@@ -163,6 +188,7 @@ export const Slotify = superclass =>
                 this.assignedWrapper.removeAttribute('hidden'); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
               }
             }
+            this._slotRendered = true;
           }
 
           updateEmptySlot() {
@@ -173,6 +199,8 @@ export const Slotify = superclass =>
               this.fallbackWrapper.removeAttribute('hidden');
               this.assignedWrapper.setAttribute('hidden', true); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
             }
+
+            this._slotRendered = true;
           }
         };
         customElements.define('s-slot', SSlot);
@@ -191,5 +219,13 @@ export const Slotify = superclass =>
       }
 
       super.connectedCallback();
+    }
+
+    async _getUpdateComplete() {
+      await super._getUpdateComplete();
+      const slotPromises = Array.from(this.querySelectorAll('s-slot')).map(
+        s => s._slotUpdateCompleted,
+      );
+      await Promise.all(slotPromises);
     }
   };
