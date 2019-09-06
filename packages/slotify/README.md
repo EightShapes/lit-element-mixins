@@ -60,4 +60,4 @@ That's it!
 
 Consumers of your component don't need to change anything, their code will already be compatible with ShadowDOM.
 
-![Slotify To ShadowDOM](./slotify-to-shadow-dom.gif)
+![Slotify To ShadowDOM](../../slotify-to-shadow-dom.gif)
