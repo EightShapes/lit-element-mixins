@@ -16,6 +16,9 @@ export const Slotify = superclass =>
             this._slotRendered = false;
             this._slotRenderAttempts = 0;
             this._maxSlotRenderAttempts = 10;
+          }
+
+          connectedCallback() {
             this._slotUpdateCompleted = new Promise((resolve, reject) => {
               const id = setInterval(() => {
                 this._slotRenderAttempts++;
@@ -34,9 +37,7 @@ export const Slotify = superclass =>
                 }
               }, 50);
             });
-          }
-
-          connectedCallback() {
+            
             // closest() polyfill for IE11
             if (!Element.prototype.matches) {
               Element.prototype.matches =
