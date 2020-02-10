@@ -169,7 +169,7 @@ export const Slotify = superclass =>
               content = unplacedNodes.filter(n => {
                 if (n.nodeType === Node.TEXT_NODE) {
                   return n;
-                } else if (!n.getAttribute('slot')) {
+                } else if (typeof n.getAttribute === 'function' && !n.getAttribute('slot')) {
                   return n;
                 }
               });
