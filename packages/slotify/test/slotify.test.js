@@ -6,22 +6,23 @@ import { Slotify } from '../src/slotify.js';
 
 const FALLBACK_CONTENT = 'This is fallback content';
 const NAMED_SLOT_FALLBACK_CONTENT = 'NAMED SLOT DEFAULT CONTENT';
-const tag = defineCE(
-  class extends Slotify(LitElement) {
-    constructor() {
-      super();
-      this.foo = true;
-    }
 
-    render() {
-      return html`
-        <s-slot name="first-slot"></s-slot>
-        <s-slot><h1>${FALLBACK_CONTENT}</h1></s-slot>
-        <s-slot name="my-named-slot">${NAMED_SLOT_FALLBACK_CONTENT}</s-slot>
-      `;
-    }
-  },
-);
+class TestSlotify extends Slotify(LitElement) {
+  constructor() {
+    super();
+    this.foo = true;
+  }
+
+  render() {
+    return html`
+      <s-slot name="first-slot"></s-slot>
+      <s-slot><h1>${FALLBACK_CONTENT}</h1></s-slot>
+      <s-slot name="my-named-slot">${NAMED_SLOT_FALLBACK_CONTENT}</s-slot>
+    `;
+  }
+}
+
+const tag = defineCE(TestSlotify);
 
 function getDefaultSlot(el) {
   return Array.from(el.querySelectorAll('s-slot')).find(
@@ -33,7 +34,27 @@ function getNamedSlot(el, name) {
   return el.querySelector(`s-slot[name="${name}"]`);
 }
 
+function delay(ms) {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(), ms);
+  });
+}
+
 describe('slotify test component', () => {
+  it('should not track render attempts until element is connected to the DOM', async () => {
+    const sSlotTimeoutIntervalMs = 50;
+    new TestSlotify();
+
+    // Invoke constructor without being connected to the DOM
+    const SSlot = customElements.get('s-slot');
+    const sSlot = new SSlot();
+
+    // `_slotRenderAttempts` should remain 0 as long as the element is not
+    // connected to the DOM
+    await delay(sSlotTimeoutIntervalMs + 1);
+    expect(sSlot._slotRenderAttempts).to.equal(0);
+  });
+
   describe('default slot behavior', () => {
     it('supports slotables in a default slot', async () => {
       const el = await fixture(
