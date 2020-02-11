@@ -37,7 +37,7 @@ export const Slotify = superclass =>
                 }
               }, 50);
             });
-            
+
             // closest() polyfill for IE11
             if (!Element.prototype.matches) {
               Element.prototype.matches =
@@ -170,7 +170,10 @@ export const Slotify = superclass =>
               content = unplacedNodes.filter(n => {
                 if (n.nodeType === Node.TEXT_NODE) {
                   return n;
-                } else if (typeof n.getAttribute === 'function' && !n.getAttribute('slot')) {
+                } else if (
+                  typeof n.getAttribute === 'function' &&
+                  !n.getAttribute('slot')
+                ) {
                   return n;
                 }
               });
