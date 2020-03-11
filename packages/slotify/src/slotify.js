@@ -238,4 +238,55 @@ export const Slotify = superclass =>
       );
       await Promise.all(slotPromises);
     }
+
+    /*
+     * After the component has rendered, this method can be used to retrieve the content assigned to a slot
+     */
+    getAssignedSlotContent(slotName = 'default') {
+      let slot;
+      if (slotName === 'default') {
+        slot = Array.from(this.querySelectorAll('s-slot'))
+          .filter(n => n.getAttribute('name') === null)
+          .pop();
+      } else {
+        slot = this.querySelector(`s-slot[name='${slotName}']`);
+      }
+
+      if (!slot) return undefined; // Component hasn't rendered yet, no slot to query
+
+      const slotContent = slot.querySelector('s-assigned-wrapper');
+      if (slotContent.childNodes) {
+        return slotContent.childNodes;
+      }
+      return undefined;
+    }
+
+    /*
+     * Before the component has rendered, this method can be used to retrieve child nodes that will be assigned to a slot
+     */
+    getSlotableContent(slotName = 'default') {
+      let slotableContent;
+      if (slotName === 'default') {
+        // get all nodes outside s-root that aren't assigned to another slot
+        slotableContent = Array.from(this.childNodes).filter(
+          n =>
+            n.tagName &&
+            n.tagName.toLowerCase() !== 's-root' &&
+            n.getAttribute('slot') === null,
+        );
+      } else {
+        slotableContent = Array.from(
+          this.querySelectorAll(`*[slot='${slotName}']`),
+        );
+      }
+
+      return slotableContent;
+    }
+
+    /*
+     * Before the component has rendered, this method can be used to determine if a slot will have content after the component renders
+     */
+    hasSlotableContent(slotName = 'default') {
+      return this.getSlotableContent(slotName).length > 0;
+    }
   };
