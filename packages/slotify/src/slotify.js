@@ -213,7 +213,13 @@ export const Slotify = superclass =>
 
     createRenderRoot() {
       // Wrap the entire rendered output in an <s-root> element
-      return document.createElement('s-root');
+      // Check for existing <s-root> element
+      const existingSRoot = this.querySelector('s-root');
+      if (existingSRoot !== null) {
+        return existingSRoot;
+      } else {
+        return document.createElement('s-root');
+      }
     }
 
     connectedCallback() {
