@@ -214,9 +214,13 @@ export const Slotify = superclass =>
     createRenderRoot() {
       // Wrap the entire rendered output in an <s-root> element
       // Check for existing <s-root> element
-      const existingSRoot = Array.from(this.childNodes).find(
-        n => n.tagName && n.tagName.toLowerCase() === 's-root',
-      );
+      // Array.find would be nice here, but IE11 doesn't like it. More verbose code to avoid polyfilling Array.find for IE11
+      let existingSRoot = undefined;
+      Array.from(this.childNodes).forEach(n => {
+        if (n.tagName && n.tagName.toLowerCase() === 's-root') {
+          existingSRoot = n;
+        }
+      });
       if (existingSRoot !== undefined) {
         return existingSRoot;
       } else {
