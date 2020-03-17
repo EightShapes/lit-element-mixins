@@ -214,10 +214,10 @@ export const Slotify = superclass =>
     createRenderRoot() {
       // Wrap the entire rendered output in an <s-root> element
       // Check for existing <s-root> element
-      const existingSRoot = Array.from(this.childNodes).filter(
+      const existingSRoot = Array.from(this.childNodes).find(
         n => n.tagName && n.tagName.toLowerCase() === 's-root',
       );
-      if (existingSRoot.length !== 0) {
+      if (existingSRoot !== undefined) {
         return existingSRoot;
       } else {
         return document.createElement('s-root');
