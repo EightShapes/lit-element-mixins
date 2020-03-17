@@ -15,6 +15,7 @@ const directives = new WeakMap();
 const isDirective = (o) => {
     return typeof o === 'function' && directives.has(o);
 };
+//# sourceMappingURL=directive.js.map
 
 /**
  * @license
@@ -46,6 +47,7 @@ const removeNodes = (container, start, end = null) => {
         start = n;
     }
 };
+//# sourceMappingURL=dom.js.map
 
 /**
  * @license
@@ -69,6 +71,7 @@ const noChange = {};
  * A sentinel value that signals a NodePart to fully clear its content.
  */
 const nothing = {};
+//# sourceMappingURL=part.js.map
 
 /**
  * @license
@@ -282,6 +285,7 @@ const createMarker = () => document.createComment('');
  *    * (') then any non-(')
  */
 const lastAttributeNameRegex = /([ \x09\x0a\x0c\x0d])([^\0-\x1F\x7F-\x9F "'>=/]+)([ \x09\x0a\x0c\x0d]*=[ \x09\x0a\x0c\x0d]*(?:[^ \x09\x0a\x0c\x0d"'`<>=]*|"[^"]*|'[^']*))$/;
+//# sourceMappingURL=template.js.map
 
 /**
  * @license
@@ -414,6 +418,7 @@ class TemplateInstance {
         return fragment;
     }
 }
+//# sourceMappingURL=template-instance.js.map
 
 /**
  * @license
@@ -502,6 +507,7 @@ class TemplateResult {
         return template;
     }
 }
+//# sourceMappingURL=template-result.js.map
 
 /**
  * @license
@@ -941,6 +947,7 @@ const getOptions = (o) => o &&
     (eventOptionsSupported ?
         { capture: o.capture, passive: o.passive, once: o.once } :
         o.capture);
+//# sourceMappingURL=parts.js.map
 
 /**
  * @license
@@ -992,6 +999,7 @@ class DefaultTemplateProcessor {
     }
 }
 const defaultTemplateProcessor = new DefaultTemplateProcessor();
+//# sourceMappingURL=default-template-processor.js.map
 
 /**
  * @license
@@ -1039,6 +1047,7 @@ function templateFactory(result) {
     return template;
 }
 const templateCaches = new Map();
+//# sourceMappingURL=template-factory.js.map
 
 /**
  * @license
@@ -1079,6 +1088,7 @@ const render = (result, container, options) => {
     part.setValue(result);
     part.commit();
 };
+//# sourceMappingURL=render.js.map
 
 /**
  * @license
@@ -1102,6 +1112,7 @@ const render = (result, container, options) => {
  * render to and update a container.
  */
 const html = (strings, ...values) => new TemplateResult(strings, values, 'html', defaultTemplateProcessor);
+//# sourceMappingURL=lit-html.js.map
 
 /**
  * @license
@@ -1226,6 +1237,7 @@ function insertNodeIntoTemplate(template, node, refNode = null) {
         }
     }
 }
+//# sourceMappingURL=modify-template.js.map
 
 /**
  * @license
@@ -1495,6 +1507,7 @@ const render$1 = (result, container, options) => {
         window.ShadyCSS.styleElement(container.host);
     }
 };
+//# sourceMappingURL=shady-render.js.map
 
 /**
  * @license
@@ -2120,6 +2133,7 @@ _a = finalized;
  * Marks class as having finished creating properties.
  */
 UpdatingElement[_a] = true;
+//# sourceMappingURL=updating-element.js.map
 
 /**
 @license
@@ -2133,6 +2147,7 @@ found at http://polymer.github.io/PATENTS.txt
 */
 const supportsAdoptingStyleSheets = ('adoptedStyleSheets' in Document.prototype) &&
     ('replace' in CSSStyleSheet.prototype);
+//# sourceMappingURL=css-tag.js.map
 
 /**
  * @license
@@ -2330,11 +2345,13 @@ LitElement['finalized'] = true;
  * @nocollapse
  */
 LitElement.render = render$1;
+//# sourceMappingURL=lit-element.js.map
 
 const Slotify = superclass =>
   class extends superclass {
     constructor() {
       super();
+
       if (!customElements.get('s-root')) {
         const SRoot = class extends HTMLElement {};
         customElements.define('s-root', SRoot);
@@ -2344,9 +2361,32 @@ const Slotify = superclass =>
           constructor() {
             super();
             this.name = this.getAttribute('name');
+
+            this._slotRendered = false;
+            this._slotRenderAttempts = 0;
+            this._maxSlotRenderAttempts = 10;
           }
 
           connectedCallback() {
+            this._slotUpdateCompleted = new Promise((resolve, reject) => {
+              const id = setInterval(() => {
+                this._slotRenderAttempts++;
+                try {
+                  if (this._slotRendered) {
+                    clearInterval(id);
+                    resolve();
+                  } else if (
+                    this._slotRenderAttempts >= this._maxSlotRenderAttempts
+                  ) {
+                    throw new Error('Slot Rendering Timeout');
+                  }
+                } catch (e) {
+                  clearInterval(id);
+                  reject(e);
+                }
+              }, 50);
+            });
+
             // closest() polyfill for IE11
             if (!Element.prototype.matches) {
               Element.prototype.matches =
@@ -2369,9 +2409,10 @@ const Slotify = superclass =>
             this.sRoot = this.closest('s-root');
 
             // Observe the "Light DOM" of the component, to detect when new nodes are added and assign them to the <s-slot> if necessary
-            this.lightDomObserver = new MutationObserver(() =>
-              this.updateAssignedContent(),
-            );
+            this.lightDomObserver = new MutationObserver(() => {
+              this._slotRendered = false;
+              this.updateAssignedContent();
+            });
             this.lightDomObserver.observe(this.sRoot.parentElement, {
               childList: true,
             });
@@ -2384,6 +2425,7 @@ const Slotify = superclass =>
 
             // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
             const assignedContentObserver = new MutationObserver(() => {
+              this._slotRendered = false;
               this.updateEmptySlot(); // This is an observer on the actual <s-slot>
               this.dispatchEvent(
                 new CustomEvent('slotchange', {
@@ -2400,6 +2442,18 @@ const Slotify = superclass =>
 
           disconnectedCallback() {
             this.lightDomObserver.disconnect(); // don't let observers pile up
+            const element = this.sRoot && this.sRoot.parentElement;
+            const fragment = document.createDocumentFragment();
+
+            Array.from(this.assignedWrapper.childNodes).forEach(child => {
+              fragment.appendChild(child);
+            });
+
+            if (element) {
+              element.appendChild(fragment);
+            }
+
+            this.sRoot = null;
           }
 
           createFallbackWrapper() {
@@ -2407,15 +2461,21 @@ const Slotify = superclass =>
               const SFallbackWrapper = class extends HTMLElement {};
               customElements.define('s-fallback-wrapper', SFallbackWrapper);
             }
+
+            const fallbackNodes = Array.from(this.childNodes).filter(
+              n =>
+                n.tagName === undefined ||
+                n.tagName.toLowerCase() !== 's-assigned-wrapper',
+            );
             // This is only called once, get the contents of this <s-slot> and wrap them in a span
-            if (this.childNodes.length === 0) {
+            if (fallbackNodes.length === 0) {
               // there's no default content, don't create the wrapper
               return false;
             } else {
               const fallbackWrapper = document.createElement(
                 's-fallback-wrapper',
               );
-              Array.from(this.childNodes).forEach(node => {
+              fallbackNodes.forEach(node => {
                 fallbackWrapper.appendChild(node);
               });
               this.appendChild(fallbackWrapper); // Add the fallback span to the component;
@@ -2459,7 +2519,10 @@ const Slotify = superclass =>
               content = unplacedNodes.filter(n => {
                 if (n.nodeType === Node.TEXT_NODE) {
                   return n;
-                } else if (!n.getAttribute('slot')) {
+                } else if (
+                  typeof n.getAttribute === 'function' &&
+                  !n.getAttribute('slot')
+                ) {
                   return n;
                 }
               });
@@ -2478,6 +2541,7 @@ const Slotify = superclass =>
                 this.assignedWrapper.removeAttribute('hidden'); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
               }
             }
+            this._slotRendered = true;
           }
 
           updateEmptySlot() {
@@ -2488,6 +2552,8 @@ const Slotify = superclass =>
               this.fallbackWrapper.removeAttribute('hidden');
               this.assignedWrapper.setAttribute('hidden', true); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
             }
+
+            this._slotRendered = true;
           }
         };
         customElements.define('s-slot', SSlot);
@@ -2496,7 +2562,15 @@ const Slotify = superclass =>
 
     createRenderRoot() {
       // Wrap the entire rendered output in an <s-root> element
-      return document.createElement('s-root');
+      // Check for existing <s-root> element
+      const existingSRoot = Array.from(this.childNodes).filter(
+        n => n.tagName && n.tagName.toLowerCase() === 's-root',
+      );
+      if (existingSRoot.length !== 0) {
+        return existingSRoot;
+      } else {
+        return document.createElement('s-root');
+      }
     }
 
     connectedCallback() {
@@ -2506,6 +2580,65 @@ const Slotify = superclass =>
       }
 
       super.connectedCallback();
+    }
+
+    async _getUpdateComplete() {
+      await super._getUpdateComplete();
+      const slotPromises = Array.from(this.querySelectorAll('s-slot')).map(
+        s => s._slotUpdateCompleted,
+      );
+      await Promise.all(slotPromises);
+    }
+
+    /*
+     * After the component has rendered, this method can be used to retrieve the content assigned to a slot
+     */
+    getAssignedSlotContent(slotName = 'default') {
+      let slot;
+      if (slotName === 'default') {
+        slot = Array.from(this.querySelectorAll('s-slot'))
+          .filter(n => n.getAttribute('name') === null)
+          .pop();
+      } else {
+        slot = this.querySelector(`s-slot[name='${slotName}']`);
+      }
+
+      if (!slot) return undefined; // Component hasn't rendered yet, no slot to query
+
+      const slotContent = slot.querySelector('s-assigned-wrapper');
+      if (slotContent.childNodes) {
+        return slotContent.childNodes;
+      }
+      return undefined;
+    }
+
+    /*
+     * Before the component has rendered, this method can be used to retrieve child nodes that will be assigned to a slot
+     */
+    getSlotableContent(slotName = 'default') {
+      let slotableContent;
+      if (slotName === 'default') {
+        // get all nodes outside s-root that aren't assigned to another slot
+        slotableContent = Array.from(this.childNodes).filter(
+          n =>
+            n.tagName &&
+            n.tagName.toLowerCase() !== 's-root' &&
+            n.getAttribute('slot') === null,
+        );
+      } else {
+        slotableContent = Array.from(
+          this.querySelectorAll(`*[slot='${slotName}']`),
+        );
+      }
+
+      return slotableContent;
+    }
+
+    /*
+     * Before the component has rendered, this method can be used to determine if a slot will have content after the component renders
+     */
+    hasSlotableContent(slotName = 'default') {
+      return this.getSlotableContent(slotName).length > 0;
     }
   };
 
@@ -2532,6 +2665,18 @@ class SlotifyTestComponent extends Slotify(LitElement) {
   }
 }
 
+class SimpleWrapper extends Slotify(LitElement) {
+  render() {
+    return html`
+      <div class="simple-wrapper"><s-slot></s-slot></div>
+    `;
+  }
+}
+
 if (window.customElements.get('slotify-test-component') === undefined) {
   window.customElements.define('slotify-test-component', SlotifyTestComponent);
+}
+
+if (window.customElements.get('simple-wrapper') === undefined) {
+  window.customElements.define('simple-wrapper', SimpleWrapper);
 }

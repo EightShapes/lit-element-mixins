@@ -1,6 +1,8 @@
 'use strict';
 
 function _typeof(obj) {
+  "@babel/helpers - typeof";
+
   if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
     _typeof = function (obj) {
       return typeof obj;
@@ -382,7 +384,7 @@ var runtime = function (exports) {
     };
   };
 
-  function AsyncIterator(generator) {
+  function AsyncIterator(generator, PromiseImpl) {
     function invoke(method, arg, resolve, reject) {
       var record = tryCatch(generator[method], generator, arg);
 
@@ -393,14 +395,14 @@ var runtime = function (exports) {
         var value = result.value;
 
         if (value && _typeof(value) === "object" && hasOwn.call(value, "__await")) {
-          return Promise.resolve(value.__await).then(function (value) {
+          return PromiseImpl.resolve(value.__await).then(function (value) {
             invoke("next", value, resolve, reject);
           }, function (err) {
             invoke("throw", err, resolve, reject);
           });
         }
 
-        return Promise.resolve(value).then(function (unwrapped) {
+        return PromiseImpl.resolve(value).then(function (unwrapped) {
           // When a yielded Promise is resolved, its final value becomes
           // the .value of the Promise<{value,done}> result for the
           // current iteration.
@@ -418,7 +420,7 @@ var runtime = function (exports) {
 
     function enqueue(method, arg) {
       function callInvokeWithMethodAndArg() {
-        return new Promise(function (resolve, reject) {
+        return new PromiseImpl(function (resolve, reject) {
           invoke(method, arg, resolve, reject);
         });
       }
@@ -455,8 +457,9 @@ var runtime = function (exports) {
   // AsyncIterator objects; they just return a Promise for the value of
   // the final result produced by the iterator.
 
-  exports.async = function (innerFn, outerFn, self, tryLocsList) {
-    var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList));
+  exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+    if (PromiseImpl === void 0) PromiseImpl = Promise;
+    var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl);
     return exports.isGeneratorFunction(outerFn) ? iter // If outerFn is a generator, return the full iterator.
     : iter.next().then(function (result) {
       return result.done ? result.value : iter.next();
@@ -1297,9 +1300,7 @@ var lastAttributeNameRegex = /([ \x09\x0a\x0c\x0d])([^\0-\x1F\x7F-\x9F "'>=/]+)(
  * with new values.
  */
 
-var TemplateInstance =
-/*#__PURE__*/
-function () {
+var TemplateInstance = /*#__PURE__*/function () {
   function TemplateInstance(template, processor, options) {
     _classCallCheck(this, TemplateInstance);
 
@@ -1486,9 +1487,7 @@ var commentMarker = " ".concat(marker, " ");
  * interpolated expressions.
  */
 
-var TemplateResult =
-/*#__PURE__*/
-function () {
+var TemplateResult = /*#__PURE__*/function () {
   function TemplateResult(strings, values, type, processor) {
     _classCallCheck(this, TemplateResult);
 
@@ -1581,9 +1580,7 @@ var isIterable = function isIterable(value) {
  * for an attribute.
  */
 
-var AttributeCommitter =
-/*#__PURE__*/
-function () {
+var AttributeCommitter = /*#__PURE__*/function () {
   function AttributeCommitter(element, name, strings) {
     _classCallCheck(this, AttributeCommitter);
 
@@ -1670,9 +1667,7 @@ function () {
  * A Part that controls all or part of an attribute value.
  */
 
-var AttributePart =
-/*#__PURE__*/
-function () {
+var AttributePart = /*#__PURE__*/function () {
   function AttributePart(committer) {
     _classCallCheck(this, AttributePart);
 
@@ -1721,9 +1716,7 @@ function () {
  * as well as arrays and iterables of those types.
  */
 
-var NodePart =
-/*#__PURE__*/
-function () {
+var NodePart = /*#__PURE__*/function () {
   function NodePart(options) {
     _classCallCheck(this, NodePart);
 
@@ -1972,9 +1965,7 @@ function () {
  * ''. If the value is falsey, the attribute is removed.
  */
 
-var BooleanAttributePart =
-/*#__PURE__*/
-function () {
+var BooleanAttributePart = /*#__PURE__*/function () {
   function BooleanAttributePart(element, name, strings) {
     _classCallCheck(this, BooleanAttributePart);
 
@@ -2036,9 +2027,7 @@ function () {
  * a string first.
  */
 
-var PropertyCommitter =
-/*#__PURE__*/
-function (_AttributeCommitter) {
+var PropertyCommitter = /*#__PURE__*/function (_AttributeCommitter) {
   _inherits(PropertyCommitter, _AttributeCommitter);
 
   function PropertyCommitter(element, name, strings) {
@@ -2078,9 +2067,7 @@ function (_AttributeCommitter) {
 
   return PropertyCommitter;
 }(AttributeCommitter);
-var PropertyPart =
-/*#__PURE__*/
-function (_AttributePart) {
+var PropertyPart = /*#__PURE__*/function (_AttributePart) {
   _inherits(PropertyPart, _AttributePart);
 
   function PropertyPart() {
@@ -2111,9 +2098,7 @@ try {
   window.removeEventListener('test', options, options);
 } catch (_e) {}
 
-var EventPart =
-/*#__PURE__*/
-function () {
+var EventPart = /*#__PURE__*/function () {
   function EventPart(element, eventName, eventContext) {
     var _this2 = this;
 
@@ -2193,9 +2178,7 @@ var getOptions = function getOptions(o) {
  * Creates Parts when a template is instantiated.
  */
 
-var DefaultTemplateProcessor =
-/*#__PURE__*/
-function () {
+var DefaultTemplateProcessor = /*#__PURE__*/function () {
   function DefaultTemplateProcessor() {
     _classCallCheck(this, DefaultTemplateProcessor);
   }
@@ -2907,9 +2890,7 @@ var finalized = 'finalized';
  * should be supplied by subclassers to render updates as desired.
  */
 
-var UpdatingElement =
-/*#__PURE__*/
-function (_HTMLElement) {
+var UpdatingElement = /*#__PURE__*/function (_HTMLElement) {
   _inherits(UpdatingElement, _HTMLElement);
 
   function UpdatingElement() {
@@ -3171,9 +3152,7 @@ function (_HTMLElement) {
   }, {
     key: "_enqueueUpdate",
     value: function () {
-      var _enqueueUpdate2 = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee() {
+      var _enqueueUpdate2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         var _this4 = this;
 
         var resolve, reject, previousUpdatePromise, result;
@@ -3646,7 +3625,7 @@ function (_HTMLElement) {
   }]);
 
   return UpdatingElement;
-}(_wrapNativeSuper(HTMLElement));
+}( /*#__PURE__*/_wrapNativeSuper(HTMLElement));
 _a = finalized;
 /**
  * Marks class as having finished creating properties.
@@ -3698,9 +3677,7 @@ var flattenStyles = function flattenStyles(styles) {
   return styles.flat ? styles.flat(Infinity) : arrayFlat(styles);
 };
 
-var LitElement =
-/*#__PURE__*/
-function (_UpdatingElement) {
+var LitElement = /*#__PURE__*/function (_UpdatingElement) {
   _inherits(LitElement, _UpdatingElement);
 
   function LitElement() {
@@ -3912,9 +3889,7 @@ LitElement['finalized'] = true;
 LitElement.render = render$1;
 
 var Slotify = function Slotify(superclass) {
-  return (
-    /*#__PURE__*/
-    function (_superclass) {
+  return (/*#__PURE__*/function (_superclass) {
       _inherits(_class, _superclass);
 
       function _class() {
@@ -3925,9 +3900,7 @@ var Slotify = function Slotify(superclass) {
         _this = _possibleConstructorReturn(this, _getPrototypeOf(_class).call(this));
 
         if (!customElements.get('s-root')) {
-          var SRoot =
-          /*#__PURE__*/
-          function (_HTMLElement) {
+          var SRoot = /*#__PURE__*/function (_HTMLElement) {
             _inherits(SRoot, _HTMLElement);
 
             function SRoot() {
@@ -3937,15 +3910,13 @@ var Slotify = function Slotify(superclass) {
             }
 
             return SRoot;
-          }(_wrapNativeSuper(HTMLElement));
+          }( /*#__PURE__*/_wrapNativeSuper(HTMLElement));
 
           customElements.define('s-root', SRoot);
         }
 
         if (!customElements.get('s-slot')) {
-          var SSlot =
-          /*#__PURE__*/
-          function (_HTMLElement2) {
+          var SSlot = /*#__PURE__*/function (_HTMLElement2) {
             _inherits(SSlot, _HTMLElement2);
 
             function SSlot() {
@@ -3955,6 +3926,9 @@ var Slotify = function Slotify(superclass) {
 
               _this2 = _possibleConstructorReturn(this, _getPrototypeOf(SSlot).call(this));
               _this2.name = _this2.getAttribute('name');
+              _this2._slotRendered = false;
+              _this2._slotRenderAttempts = 0;
+              _this2._maxSlotRenderAttempts = 10;
               return _this2;
             }
 
@@ -3963,7 +3937,24 @@ var Slotify = function Slotify(superclass) {
               value: function connectedCallback() {
                 var _this3 = this;
 
-                // closest() polyfill for IE11
+                this._slotUpdateCompleted = new Promise(function (resolve, reject) {
+                  var id = setInterval(function () {
+                    _this3._slotRenderAttempts++;
+
+                    try {
+                      if (_this3._slotRendered) {
+                        clearInterval(id);
+                        resolve();
+                      } else if (_this3._slotRenderAttempts >= _this3._maxSlotRenderAttempts) {
+                        throw new Error('Slot Rendering Timeout');
+                      }
+                    } catch (e) {
+                      clearInterval(id);
+                      reject(e);
+                    }
+                  }, 50);
+                }); // closest() polyfill for IE11
+
                 if (!Element.prototype.matches) {
                   Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
                 }
@@ -3984,7 +3975,9 @@ var Slotify = function Slotify(superclass) {
                 this.sRoot = this.closest('s-root'); // Observe the "Light DOM" of the component, to detect when new nodes are added and assign them to the <s-slot> if necessary
 
                 this.lightDomObserver = new MutationObserver(function () {
-                  return _this3.updateAssignedContent();
+                  _this3._slotRendered = false;
+
+                  _this3.updateAssignedContent();
                 });
                 this.lightDomObserver.observe(this.sRoot.parentElement, {
                   childList: true
@@ -3994,6 +3987,8 @@ var Slotify = function Slotify(superclass) {
                 this.assignedWrapper = this.assignedWrapper || this.createAssignedWrapper(); // Observe the assignedContentWrapper (so default content can be shown if all slotables are deleted)
 
                 var assignedContentObserver = new MutationObserver(function () {
+                  _this3._slotRendered = false;
+
                   _this3.updateEmptySlot(); // This is an observer on the actual <s-slot>
 
 
@@ -4010,14 +4005,24 @@ var Slotify = function Slotify(superclass) {
               key: "disconnectedCallback",
               value: function disconnectedCallback() {
                 this.lightDomObserver.disconnect(); // don't let observers pile up
+
+                var element = this.sRoot && this.sRoot.parentElement;
+                var fragment = document.createDocumentFragment();
+                Array.from(this.assignedWrapper.childNodes).forEach(function (child) {
+                  fragment.appendChild(child);
+                });
+
+                if (element) {
+                  element.appendChild(fragment);
+                }
+
+                this.sRoot = null;
               }
             }, {
               key: "createFallbackWrapper",
               value: function createFallbackWrapper() {
                 if (!customElements.get('s-fallback-wrapper')) {
-                  var SFallbackWrapper =
-                  /*#__PURE__*/
-                  function (_HTMLElement3) {
+                  var SFallbackWrapper = /*#__PURE__*/function (_HTMLElement3) {
                     _inherits(SFallbackWrapper, _HTMLElement3);
 
                     function SFallbackWrapper() {
@@ -4027,18 +4032,21 @@ var Slotify = function Slotify(superclass) {
                     }
 
                     return SFallbackWrapper;
-                  }(_wrapNativeSuper(HTMLElement));
+                  }( /*#__PURE__*/_wrapNativeSuper(HTMLElement));
 
                   customElements.define('s-fallback-wrapper', SFallbackWrapper);
-                } // This is only called once, get the contents of this <s-slot> and wrap them in a span
+                }
 
+                var fallbackNodes = Array.from(this.childNodes).filter(function (n) {
+                  return n.tagName === undefined || n.tagName.toLowerCase() !== 's-assigned-wrapper';
+                }); // This is only called once, get the contents of this <s-slot> and wrap them in a span
 
-                if (this.childNodes.length === 0) {
+                if (fallbackNodes.length === 0) {
                   // there's no default content, don't create the wrapper
                   return false;
                 } else {
                   var fallbackWrapper = document.createElement('s-fallback-wrapper');
-                  Array.from(this.childNodes).forEach(function (node) {
+                  fallbackNodes.forEach(function (node) {
                     fallbackWrapper.appendChild(node);
                   });
                   this.appendChild(fallbackWrapper); // Add the fallback span to the component;
@@ -4050,9 +4058,7 @@ var Slotify = function Slotify(superclass) {
               key: "createAssignedWrapper",
               value: function createAssignedWrapper() {
                 if (!customElements.get('s-assigned-wrapper')) {
-                  var SAssignedWrapper =
-                  /*#__PURE__*/
-                  function (_HTMLElement4) {
+                  var SAssignedWrapper = /*#__PURE__*/function (_HTMLElement4) {
                     _inherits(SAssignedWrapper, _HTMLElement4);
 
                     function SAssignedWrapper() {
@@ -4062,7 +4068,7 @@ var Slotify = function Slotify(superclass) {
                     }
 
                     return SAssignedWrapper;
-                  }(_wrapNativeSuper(HTMLElement));
+                  }( /*#__PURE__*/_wrapNativeSuper(HTMLElement));
 
                   customElements.define('s-assigned-wrapper', SAssignedWrapper);
                 }
@@ -4093,7 +4099,7 @@ var Slotify = function Slotify(superclass) {
                   content = unplacedNodes.filter(function (n) {
                     if (n.nodeType === Node.TEXT_NODE) {
                       return n;
-                    } else if (!n.getAttribute('slot')) {
+                    } else if (typeof n.getAttribute === 'function' && !n.getAttribute('slot')) {
                       return n;
                     }
                   });
@@ -4112,6 +4118,8 @@ var Slotify = function Slotify(superclass) {
                     this.assignedWrapper.removeAttribute('hidden'); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
                   }
                 }
+
+                this._slotRendered = true;
               }
             }, {
               key: "updateEmptySlot",
@@ -4120,11 +4128,13 @@ var Slotify = function Slotify(superclass) {
                   this.fallbackWrapper.removeAttribute('hidden');
                   this.assignedWrapper.setAttribute('hidden', true); // Do a visibility toggle so the mutationObserver will not be triggered and create a loop
                 }
+
+                this._slotRendered = true;
               }
             }]);
 
             return SSlot;
-          }(_wrapNativeSuper(HTMLElement));
+          }( /*#__PURE__*/_wrapNativeSuper(HTMLElement));
 
           customElements.define('s-slot', SSlot);
         }
@@ -4136,7 +4146,16 @@ var Slotify = function Slotify(superclass) {
         key: "createRenderRoot",
         value: function createRenderRoot() {
           // Wrap the entire rendered output in an <s-root> element
-          return document.createElement('s-root');
+          // Check for existing <s-root> element
+          var existingSRoot = Array.from(this.childNodes).filter(function (n) {
+            return n.tagName && n.tagName.toLowerCase() === 's-root';
+          });
+
+          if (existingSRoot.length !== 0) {
+            return existingSRoot;
+          } else {
+            return document.createElement('s-root');
+          }
         }
       }, {
         key: "connectedCallback",
@@ -4148,12 +4167,114 @@ var Slotify = function Slotify(superclass) {
 
           _get(_getPrototypeOf(_class.prototype), "connectedCallback", this).call(this);
         }
+      }, {
+        key: "_getUpdateComplete",
+        value: function () {
+          var _getUpdateComplete2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+            var slotPromises;
+            return regeneratorRuntime.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+                    _context.next = 2;
+                    return _get(_getPrototypeOf(_class.prototype), "_getUpdateComplete", this).call(this);
+
+                  case 2:
+                    slotPromises = Array.from(this.querySelectorAll('s-slot')).map(function (s) {
+                      return s._slotUpdateCompleted;
+                    });
+                    _context.next = 5;
+                    return Promise.all(slotPromises);
+
+                  case 5:
+                  case "end":
+                    return _context.stop();
+                }
+              }
+            }, _callee, this);
+          }));
+
+          function _getUpdateComplete() {
+            return _getUpdateComplete2.apply(this, arguments);
+          }
+
+          return _getUpdateComplete;
+        }()
+        /*
+         * After the component has rendered, this method can be used to retrieve the content assigned to a slot
+         */
+
+      }, {
+        key: "getAssignedSlotContent",
+        value: function getAssignedSlotContent() {
+          var slotName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'default';
+          var slot;
+
+          if (slotName === 'default') {
+            slot = Array.from(this.querySelectorAll('s-slot')).filter(function (n) {
+              return n.getAttribute('name') === null;
+            }).pop();
+          } else {
+            slot = this.querySelector("s-slot[name='".concat(slotName, "']"));
+          }
+
+          if (!slot) return undefined; // Component hasn't rendered yet, no slot to query
+
+          var slotContent = slot.querySelector('s-assigned-wrapper');
+
+          if (slotContent.childNodes) {
+            return slotContent.childNodes;
+          }
+
+          return undefined;
+        }
+        /*
+         * Before the component has rendered, this method can be used to retrieve child nodes that will be assigned to a slot
+         */
+
+      }, {
+        key: "getSlotableContent",
+        value: function getSlotableContent() {
+          var slotName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'default';
+          var slotableContent;
+
+          if (slotName === 'default') {
+            // get all nodes outside s-root that aren't assigned to another slot
+            slotableContent = Array.from(this.childNodes).filter(function (n) {
+              return n.tagName && n.tagName.toLowerCase() !== 's-root' && n.getAttribute('slot') === null;
+            });
+          } else {
+            slotableContent = Array.from(this.querySelectorAll("*[slot='".concat(slotName, "']")));
+          }
+
+          return slotableContent;
+        }
+        /*
+         * Before the component has rendered, this method can be used to determine if a slot will have content after the component renders
+         */
+
+      }, {
+        key: "hasSlotableContent",
+        value: function hasSlotableContent() {
+          var slotName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'default';
+          return this.getSlotableContent(slotName).length > 0;
+        }
       }]);
 
       return _class;
     }(superclass)
   );
 };
+
+function _templateObject2() {
+  var data = _taggedTemplateLiteral(["\n      <div class=\"simple-wrapper\"><s-slot></s-slot></div>\n    "]);
+
+  _templateObject2 = function _templateObject2() {
+    return data;
+  };
+
+  return data;
+}
 
 function _templateObject() {
   var data = _taggedTemplateLiteral(["\n      <div class=\"burger-wrap\">\n        <s-slot name=\"bun-top\"></s-slot>\n        <s-slot @slotchange=", " name=\"cheese\"\n          >DEFAULT CHEESE</s-slot\n        >\n        <s-slot @slotchange=", ">JUST BEEF</s-slot>\n        <s-slot name=\"bun-bottom\"></s-slot>\n        <div class=\"burger-plate\">Burger Plate</div>\n      </div>\n    "]);
@@ -4164,9 +4285,7 @@ function _templateObject() {
 
   return data;
 }
-var SlotifyTestComponent =
-/*#__PURE__*/
-function (_Slotify) {
+var SlotifyTestComponent = /*#__PURE__*/function (_Slotify) {
   _inherits(SlotifyTestComponent, _Slotify);
 
   function SlotifyTestComponent() {
@@ -4194,7 +4313,29 @@ function (_Slotify) {
 
   return SlotifyTestComponent;
 }(Slotify(LitElement));
+var SimpleWrapper = /*#__PURE__*/function (_Slotify2) {
+  _inherits(SimpleWrapper, _Slotify2);
+
+  function SimpleWrapper() {
+    _classCallCheck(this, SimpleWrapper);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(SimpleWrapper).apply(this, arguments));
+  }
+
+  _createClass(SimpleWrapper, [{
+    key: "render",
+    value: function render() {
+      return html(_templateObject2());
+    }
+  }]);
+
+  return SimpleWrapper;
+}(Slotify(LitElement));
 
 if (window.customElements.get('slotify-test-component') === undefined) {
   window.customElements.define('slotify-test-component', SlotifyTestComponent);
+}
+
+if (window.customElements.get('simple-wrapper') === undefined) {
+  window.customElements.define('simple-wrapper', SimpleWrapper);
 }
