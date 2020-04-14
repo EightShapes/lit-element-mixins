@@ -214,6 +214,24 @@ describe('slotify test component', () => {
       expect(firstSlot.textContent).to.contain('This is second in source');
       expect(namedSlot.textContent).to.contain('This is first in source');
     });
+
+    it('should not choke on comments', async () => {
+      const el = await fixture(
+        `<${tag}>
+          <!---->
+          <div slot="my-named-slot">This is first in source</div>
+          <div slot="first-slot">This is second in source</div>
+        </${tag}>`,
+      );
+
+      // When this test fails it throws a console.error
+
+      const firstSlot = getNamedSlot(el, 'first-slot');
+      const namedSlot = getNamedSlot(el, 'my-named-slot');
+
+      expect(firstSlot.textContent).to.contain('This is second in source');
+      expect(namedSlot.textContent).to.contain('This is first in source');
+    });
   });
 
   describe('update complete event', () => {
