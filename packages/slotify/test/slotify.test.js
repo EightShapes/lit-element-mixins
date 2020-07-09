@@ -3,6 +3,7 @@ import { expect, fixture, defineCE } from '@open-wc/testing';
 import { elementUpdated } from '@open-wc/testing-helpers';
 import { LitElement, html } from 'lit-element';
 import { Slotify } from '../src/slotify.js';
+import { createSandbox } from 'sinon';
 
 const FALLBACK_CONTENT = 'This is fallback content';
 const NAMED_SLOT_FALLBACK_CONTENT = 'NAMED SLOT DEFAULT CONTENT';
@@ -41,6 +42,12 @@ function delay(ms) {
 }
 
 describe('slotify test component', () => {
+  const sandbox = createSandbox();
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   it('should not track render attempts until element is connected to the DOM', async () => {
     const sSlotTimeoutIntervalMs = 50;
     new TestSlotify();
@@ -270,6 +277,77 @@ describe('slotify test component', () => {
         `${tag} ${tag} ${tag} ${tag} s-assigned-wrapper .default-content`,
       );
       expect(deeplyNestedSlotable).to.not.be.null;
+    });
+  });
+
+  describe('hasSlotableContent', () => {
+    it('identifies ELEMENT_NODEs in the default slot', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasDefaultSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent();
+        }
+      }
+
+      const hasDefaultSlotTestTag = defineCE(HasDefaultSlotTest);
+      const el = document.createElement(hasDefaultSlotTestTag);
+
+      // slot an element into the default slot
+      el.innerHTML = '<div>This is a default slot of nodeType ELEMENT_NODE</div>';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly();
+      expect(el.hasSlotableContent).to.have.returned(true);
+    });
+
+    it('identifies TEXT_NODEs in the default slot', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasDefaultSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent();
+        }
+      }
+
+      const hasDefaultSlotTestTag = defineCE(HasDefaultSlotTest);
+      const el = document.createElement(hasDefaultSlotTestTag);
+
+      // slot plain text into the default slot
+      el.innerHTML = 'This is a default slot of nodeType TEXT_NODE';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly();
+      expect(el.hasSlotableContent).to.have.returned(true);
+    });
+
+    it('identifies ELEMENT_NODEs in a named slot', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasNamedSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent('my-named-slot');
+        }
+      }
+
+      const hasNamedSlotTestTag = defineCE(HasNamedSlotTest);
+      const el = document.createElement(hasNamedSlotTestTag);
+
+      // slot an element into a named slot
+      el.innerHTML = '<div slot="my-named-slot">This is a named slot of nodeType ELEMENT_NODE</div>';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly('my-named-slot');
+      expect(el.hasSlotableContent).to.have.returned(true);
     });
   });
 });
