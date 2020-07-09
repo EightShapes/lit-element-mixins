@@ -275,12 +275,11 @@ export const Slotify = superclass =>
       let slotableContent;
       if (slotName === 'default') {
         // get all nodes outside s-root that aren't assigned to another slot
-        slotableContent = Array.from(this.childNodes).filter(
-          n =>
-            n.tagName &&
-            n.tagName.toLowerCase() !== 's-root' &&
-            n.getAttribute('slot') === null,
-        );
+        slotableContent = Array.from(this.childNodes).filter(n => {
+          // only Element nodes can have tagNames and attributes. if the node is something else, we can
+          // safely assume that it should be moved into the default slot.
+          return n.nodeType !== Node.ELEMENT_NODE || (n.tagName.toLowerCase() !== 's-root' && n.getAttribute('slot') === null);
+        });
       } else {
         slotableContent = Array.from(
           this.querySelectorAll(`*[slot='${slotName}']`),
