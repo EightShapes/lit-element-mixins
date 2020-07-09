@@ -162,14 +162,13 @@ export const Slotify = superclass =>
               // Handle named slots
               content = unplacedNodes.filter(
                 node =>
-                  node.nodeType !== Node.TEXT_NODE &&
-                  node.nodeType !== Node.COMMENT_NODE &&
+                  node.nodeType === Node.ELEMENT_NODE &&
                   node.getAttribute('slot') === this.name,
               );
             } else {
               // Handle default slot content
               content = unplacedNodes.filter(n => {
-                if (n.nodeType === Node.TEXT_NODE) {
+                if (n.nodeType !== Node.ELEMENT_NODE) {
                   return n;
                 } else if (
                   typeof n.getAttribute === 'function' &&
@@ -278,7 +277,11 @@ export const Slotify = superclass =>
         slotableContent = Array.from(this.childNodes).filter(n => {
           // only Element nodes can have tagNames and attributes. if the node is something else, we can
           // safely assume that it should be moved into the default slot.
-          return n.nodeType !== Node.ELEMENT_NODE || (n.tagName.toLowerCase() !== 's-root' && n.getAttribute('slot') === null);
+          return (
+            n.nodeType !== Node.ELEMENT_NODE ||
+            (n.tagName.toLowerCase() !== 's-root' &&
+              n.getAttribute('slot') === null)
+          );
         });
       } else {
         slotableContent = Array.from(
