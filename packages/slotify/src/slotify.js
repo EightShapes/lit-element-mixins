@@ -162,14 +162,13 @@ export const Slotify = superclass =>
               // Handle named slots
               content = unplacedNodes.filter(
                 node =>
-                  node.nodeType !== Node.TEXT_NODE &&
-                  node.nodeType !== Node.COMMENT_NODE &&
+                  node.nodeType === Node.ELEMENT_NODE &&
                   node.getAttribute('slot') === this.name,
               );
             } else {
               // Handle default slot content
               content = unplacedNodes.filter(n => {
-                if (n.nodeType === Node.TEXT_NODE) {
+                if (n.nodeType !== Node.ELEMENT_NODE) {
                   return n;
                 } else if (
                   typeof n.getAttribute === 'function' &&
