@@ -2,7 +2,7 @@
   "name": "@eightshapes/css-classify",
   "version": "0.1.1",
   "description": "A class mixin for LitElement that adds helper methods for CSS classes",
-  "main": "./src/css-classify.js",
+  "main": "./src/cssClassify.js",
   "author": "Kevin Powell <kevin@eightshapes.com>",
   "license": "MIT",
   "repository": {
