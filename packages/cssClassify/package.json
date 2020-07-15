@@ -29,5 +29,6 @@
     "test:compatibility": "karma start --compatibility all --coverage",
     "test:compatibility:watch": "karma start --compatibility all --auto-watch=true --single-run=false",
     "test:bs": "karma start karma.bs.config.js --compatibility all --coverage"
-  }
+  },
+  "gitHead": "00c3b67a7e1f171f348d3a8bab346be4463bc5fd"
 }
