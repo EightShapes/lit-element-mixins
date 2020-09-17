@@ -281,6 +281,28 @@ describe('slotify test component', () => {
   });
 
   describe('hasSlotableContent', () => {
+    it('returns false when the default slot is unused', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasDefaultSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent();
+        }
+      }
+
+      const hasDefaultSlotTestTag = defineCE(HasDefaultSlotTest);
+      const el = document.createElement(hasDefaultSlotTestTag);
+
+      el.innerHTML = '';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly();
+      expect(el.hasSlotableContent).to.have.returned(false);
+    });
+
     it('identifies ELEMENT_NODEs in the default slot', async () => {
       // invoke `hasSlotableContent` before initial render so we can spy on the return value
       class HasDefaultSlotTest extends TestSlotify {
@@ -294,7 +316,8 @@ describe('slotify test component', () => {
       const el = document.createElement(hasDefaultSlotTestTag);
 
       // slot an element into the default slot
-      el.innerHTML = '<div>This is a default slot of nodeType ELEMENT_NODE</div>';
+      el.innerHTML =
+        '<div>This is a default slot of nodeType ELEMENT_NODE</div>';
 
       sandbox.spy(el, 'hasSlotableContent');
 
@@ -327,6 +350,126 @@ describe('slotify test component', () => {
       expect(el.hasSlotableContent).to.have.returned(true);
     });
 
+    it('identifies empty TEXT_NODEs in the default slot', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasDefaultSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent();
+        }
+      }
+
+      const hasDefaultSlotTestTag = defineCE(HasDefaultSlotTest);
+      const el = document.createElement(hasDefaultSlotTestTag);
+
+      // slot an empty text node into the default slot
+      el.innerHTML = ' ';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly();
+      expect(el.hasSlotableContent).to.have.returned(true);
+    });
+
+    it('ignores empty TEXT_NODEs in the default slot when ignoreWhitespace is enabled', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasDefaultSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent('default', { ignoreWhitespace: true });
+        }
+      }
+
+      const hasDefaultSlotTestTag = defineCE(HasDefaultSlotTest);
+      const el = document.createElement(hasDefaultSlotTestTag);
+
+      // slot an empty text node into the default slot
+      el.innerHTML = ' ';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly('default', {
+        ignoreWhitespace: true,
+      });
+      expect(el.hasSlotableContent).to.have.returned(false);
+    });
+
+    it('identifies COMMENT_NODEs in the default slot', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasDefaultSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent();
+        }
+      }
+
+      const hasDefaultSlotTestTag = defineCE(HasDefaultSlotTest);
+      const el = document.createElement(hasDefaultSlotTestTag);
+
+      // slot a comment into the default slot
+      el.innerHTML = '<!-- foo -->';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly();
+      expect(el.hasSlotableContent).to.have.returned(true);
+    });
+
+    it('ignores COMMENT_NODEs in the default slot when ignoreComments is enabled', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasDefaultSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent('default', { ignoreComments: true });
+        }
+      }
+
+      const hasDefaultSlotTestTag = defineCE(HasDefaultSlotTest);
+      const el = document.createElement(hasDefaultSlotTestTag);
+
+      // slot a comment into the default slot
+      el.innerHTML = '<!-- foo -->';
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly('default', {
+        ignoreComments: true,
+      });
+      expect(el.hasSlotableContent).to.have.returned(false);
+    });
+
+    it('returns false when a named slot is unused', async () => {
+      // invoke `hasSlotableContent` before initial render so we can spy on the return value
+      class HasNamedSlotTest extends TestSlotify {
+        connectedCallback() {
+          super.connectedCallback();
+          this.hasSlotableContent('my-named-slot');
+        }
+      }
+
+      const hasNamedSlotTestTag = defineCE(HasNamedSlotTest);
+      const el = document.createElement(hasNamedSlotTestTag);
+
+      el.innerHTML = "<div>This is not the named slot you're looking for</div>";
+
+      sandbox.spy(el, 'hasSlotableContent');
+
+      await fixture(el);
+
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly(
+        'my-named-slot',
+      );
+      expect(el.hasSlotableContent).to.have.returned(false);
+    });
+
     it('identifies ELEMENT_NODEs in a named slot', async () => {
       // invoke `hasSlotableContent` before initial render so we can spy on the return value
       class HasNamedSlotTest extends TestSlotify {
@@ -340,14 +483,60 @@ describe('slotify test component', () => {
       const el = document.createElement(hasNamedSlotTestTag);
 
       // slot an element into a named slot
-      el.innerHTML = '<div slot="my-named-slot">This is a named slot of nodeType ELEMENT_NODE</div>';
+      el.innerHTML =
+        '<div slot="my-named-slot">This is a named slot of nodeType ELEMENT_NODE</div>';
 
       sandbox.spy(el, 'hasSlotableContent');
 
       await fixture(el);
 
-      expect(el.hasSlotableContent).to.have.been.calledWithExactly('my-named-slot');
+      expect(el.hasSlotableContent).to.have.been.calledWithExactly(
+        'my-named-slot',
+      );
       expect(el.hasSlotableContent).to.have.returned(true);
+    });
+  });
+
+  describe('hasAssignedSlotContent', () => {
+    it('returns false when the default slot is unused', async () => {
+      const el = await fixture(
+        `<${tag}><div slot="my-named-slot">Some named slot content</div></${tag}>`,
+      );
+
+      const hasAssignedSlotContent = el.hasAssignedSlotContent();
+      expect(hasAssignedSlotContent).to.be.false;
+    });
+
+    it('identifies ELEMENT_NODEs in the default slot', async () => {
+      const el = await fixture(
+        `<${tag}><div>Some default slot content</div></${tag}>`,
+      );
+
+      const hasAssignedSlotContent = el.hasAssignedSlotContent();
+      expect(hasAssignedSlotContent).to.be.true;
+    });
+
+    it('identifies TEXT_NODEs in the default slot', async () => {
+      const el = await fixture(
+        `<${tag}>Some default slot text content</${tag}>`,
+      );
+
+      const hasAssignedSlotContent = el.hasAssignedSlotContent();
+      expect(hasAssignedSlotContent).to.be.true;
+    });
+
+    it('identifies empty TEXT_NODEs in the default slot', async () => {
+      const el = await fixture(`<${tag}> </${tag}>`);
+
+      const hasAssignedSlotContent = el.hasAssignedSlotContent();
+      expect(hasAssignedSlotContent).to.be.true;
+    });
+
+    it('identifies COMMENT_NODEs in the default slot', async () => {
+      const el = await fixture(`<${tag}><!-- foo --></${tag}>`);
+
+      const hasAssignedSlotContent = el.hasAssignedSlotContent();
+      expect(hasAssignedSlotContent).to.be.true;
     });
   });
 });
