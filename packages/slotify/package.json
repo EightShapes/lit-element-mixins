@@ -1,6 +1,6 @@
 {
   "name": "@eightshapes/slotify",
-  "version": "0.5.5",
+  "version": "0.6.0",
   "description": "A class mixin for LitElement that adds <slot> functionality to templates without using the ShadowDOM",
   "main": "./src/slotify.js",
   "author": "Kevin Powell <kevin@eightshapes.com>",
