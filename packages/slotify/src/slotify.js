@@ -1,5 +1,10 @@
-export const Slotify = superclass =>
-  class extends superclass {
+export const Slotify = superclass => {
+  const DEFAULT_SLOT_INTROSPECTION_OPTIONS = {
+    ignoreComments: false,
+    ignoreWhitespace: false,
+  };
+
+  return class extends superclass {
     constructor() {
       super();
 
@@ -270,13 +275,27 @@ export const Slotify = superclass =>
     /*
      * Before the component has rendered, this method can be used to retrieve child nodes that will be assigned to a slot
      */
-    getSlotableContent(slotName = 'default') {
+    getSlotableContent(slotName = 'default', options) {
+      options = Object.assign({}, DEFAULT_SLOT_INTROSPECTION_OPTIONS, options || {});
+
       let slotableContent;
       if (slotName === 'default') {
+
+        const isEmptyTextNode = n => {
+          return n.nodeType === Node.TEXT_NODE && (n.nodeValue == null || n.nodeValue.trim() === '');
+        };
+
         // get all nodes outside s-root that aren't assigned to another slot
         slotableContent = Array.from(this.childNodes).filter(n => {
           // only Element nodes can have tagNames and attributes. if the node is something else, we can
           // safely assume that it should be moved into the default slot.
+
+          if (options.ignoreComments && n.nodeType === Node.COMMENT_NODE) {
+            return false;
+          } else if (options.ignoreWhitespace && isEmptyTextNode(n)) {
+            return false;
+          }
+
           return (
             n.nodeType !== Node.ELEMENT_NODE ||
             (n.tagName.toLowerCase() !== 's-root' &&
@@ -293,9 +312,19 @@ export const Slotify = superclass =>
     }
 
     /*
+     * After the component has rendered, this method can be used to determine if a slot has assigned content
+     */
+    hasAssignedSlotContent(slotName = 'default') {
+      return this.getAssignedSlotContent(slotName).length > 0;
+    }
+
+    /*
      * Before the component has rendered, this method can be used to determine if a slot will have content after the component renders
      */
-    hasSlotableContent(slotName = 'default') {
-      return this.getSlotableContent(slotName).length > 0;
+    hasSlotableContent(slotName = 'default', options) {
+      options = Object.assign({}, DEFAULT_SLOT_INTROSPECTION_OPTIONS, options || {});
+
+      return this.getSlotableContent(slotName, options).length > 0;
     }
   };
+}
