@@ -315,7 +315,13 @@ export const Slotify = superclass => {
      * After the component has rendered, this method can be used to determine if a slot has assigned content
      */
     hasAssignedSlotContent(slotName = 'default') {
-      return this.getAssignedSlotContent(slotName).length > 0;
+      const assignedSlotContent = this.getAssignedSlotContent(slotName);
+
+      if (typeof assignedSlotContent === 'undefined') {
+        return false;
+      } else {
+        return assignedSlotContent.length > 0;
+      }
     }
 
     /*

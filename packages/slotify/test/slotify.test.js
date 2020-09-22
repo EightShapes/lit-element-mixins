@@ -498,6 +498,18 @@ describe('slotify test component', () => {
   });
 
   describe('hasAssignedSlotContent', () => {
+    it('returns false when the slot does not exist', async () => {
+      const el = await fixture(
+        `<${tag}><div>Some default slot content</div></${tag}>`,
+      );
+
+      sandbox.spy(el, 'getAssignedSlotContent');
+
+      const hasAssignedSlotContent = el.hasAssignedSlotContent('non-existent-slot');
+      expect(el.getAssignedSlotContent).to.have.returned(undefined);
+      expect(hasAssignedSlotContent).to.be.false;
+    });
+
     it('returns false when the default slot is unused', async () => {
       const el = await fixture(
         `<${tag}><div slot="my-named-slot">Some named slot content</div></${tag}>`,
